@@ -1,0 +1,81 @@
+import CartScreen from '../screens/CartScreen';
+import ProductDetailsScreen from '../screens/ProductDetailsScreen';
+import React from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+
+import LoginScreen from '../screens/LoginScreen';
+import BottomTabs from './BottomTabs';
+import AddressListScreen from '../screens/AddressListScreen';
+import WishlistScreen from '../screens/WishlistScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
+import AddAddressScreen from '../screens/AddAddressScreen';
+import CheckoutScreen from '../screens/CheckoutScreen';
+import OrderSuccessScreen from '../screens/OrderSuccessScreen';
+import PaymentScreen from '../screens/PaymentScreen';
+import SubscriptionScreen from '../screens/SubscriptionScreen';
+
+const Stack = createNativeStackNavigator();
+
+export default function AppNavigator() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{headerShown: false}}>
+        <Stack.Screen
+          name="MainTabs"
+          component={BottomTabs}
+        />
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+        />
+        <Stack.Screen
+          name="ProductDetails"
+          component={ProductDetailsScreen}
+        />
+        <Stack.Screen
+          name="Cart"
+          component={CartScreen}
+        />
+        <Stack.Screen
+          name="AddressList"
+          component={AddressListScreen}
+        />
+        <Stack.Screen
+          name="Wishlist"
+          component={WishlistScreen}
+        />
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationsScreen}
+        />
+        <Stack.Screen
+          name="HelpSupport"
+          component={HelpSupportScreen}
+        />
+        <Stack.Screen
+          name="AddAddress"
+          component={AddAddressScreen}
+        />
+        <Stack.Screen
+          name="Checkout"
+          component={CheckoutScreen}
+        />
+        <Stack.Screen
+          name="OrderSuccess"
+          component={OrderSuccessScreen} 
+        />
+        <Stack.Screen
+          name="Payment"
+          component={PaymentScreen}
+        />
+        <Stack.Screen
+          name="Subscription"
+          component={SubscriptionScreen}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

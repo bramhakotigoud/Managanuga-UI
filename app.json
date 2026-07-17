@@ -1,4 +1,9 @@
 {
   "name": "ManaGanugaApp",
-  "displayName": "ManaGanugaApp"
+  "displayName": "ManaGanugaApp",
+  "extra": {
+    "eas": {
+      "projectId": "84968938-4955-4976-bcad-7c459e802225"
+    }
+  }
 }
