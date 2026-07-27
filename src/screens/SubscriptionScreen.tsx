@@ -28,6 +28,7 @@ export default function SubscriptionScreen({navigation}: any) {
   const loadPlans = async () => {
     try {
       const response = await getSubscriptionPlans();
+      console.log("Subscription Plans:", response);
 
       setPlans(response);
 
@@ -43,7 +44,15 @@ export default function SubscriptionScreen({navigation}: any) {
 
   const subscribeNow = () => {
     navigation.navigate('Payment', {
-      subscription: selectedPlan,
+      type: 'membership',
+      plan: {
+        id: selectedPlan.id,
+        name: selectedPlan.plan_name,
+        price: selectedPlan.plan_price,
+        discount: selectedPlan.discount,
+        walletAmount: selectedPlan.wallet_amount,
+        monthlyClaim: selectedPlan.monthly_claim,
+      }
     });
   };
 

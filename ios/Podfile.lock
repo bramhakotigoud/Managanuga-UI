@@ -27,7 +27,9 @@ PODS:
   - hermes-engine (250829098.0.14):
     - hermes-engine/Pre-built (= 250829098.0.14)
   - hermes-engine/Pre-built (250829098.0.14)
-  - razorpay-pod (1.5.4)
+  - razorpay-core-pod (1.0.7)
+  - razorpay-pod (1.5.6):
+    - razorpay-core-pod (= 1.0.7)
   - RCTDeprecation (0.86.0)
   - RCTRequired (0.86.0)
   - RCTSwiftUI (0.86.0)
@@ -2319,6 +2321,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - razorpay-core-pod
     - razorpay-pod
 
 EXTERNAL SOURCES:
@@ -2501,7 +2504,8 @@ SPEC CHECKSUMS:
   BVLinearGradient: cb006ba232a1f3e4f341bb62c42d1098c284da70
   FBLazyVector: b3e7ad108f0d882e30445c5527d774e3fd432f3d
   hermes-engine: 9c57c0b150d90b1c697f2fd924c564f333e8ab8b
-  razorpay-pod: 3ba80419f3315352d6ffa336a194ad95ab249700
+  razorpay-core-pod: c7f3ac3d214c1a7fac4e9a59c1de7eac02130573
+  razorpay-pod: e939db88bc67c33a84bcc419505b8546b1081023
   RCTDeprecation: 2a74a2c57675e64419bd89078efde81f7c1de90b
   RCTRequired: 30451112e6fef4e6f31b4e7eee0845156e35e4b0
   RCTSwiftUI: 5aaf0b07e747ba749dc6acc94d8bd41eea4b570f
@@ -2585,6 +2589,6 @@ SPEC CHECKSUMS:
   RNWorklets: 110467c6a831aed93c013a36d7fc37892881967b
   Yoga: fe50ab299e578f397fef753cf309c6703a4db29b
 
-PODFILE CHECKSUM: 0af7c62b48cdd4b44e9d0f1eeb04d4d76384d469
+PODFILE CHECKSUM: 57df40067577a713810e2afb5773f21a767161ee
 
 COCOAPODS: 1.16.2

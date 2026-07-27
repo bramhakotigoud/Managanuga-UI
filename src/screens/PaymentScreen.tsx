@@ -22,10 +22,21 @@ export default function PaymentScreen({
 }: any) {
   const { getCartTotal } = useCart();
   const buyNow = route?.params?.buyNow;
-  const product = route?.params?.product;
+const product = route?.params?.product;
 
-  const productAmount = 1;
-  const totalAmount = 1;
+// NEW
+const paymentType = route?.params?.type || "order";
+const membershipPlan = route?.params?.plan;
+
+const isMembership = paymentType === "membership";
+
+const productAmount = buyNow
+  ? Number(product?.price || 0)
+  : getCartTotal();
+
+const totalAmount = isMembership
+  ? 1
+  : 1
 
  console.log("buyNow =", buyNow);
  console.log("product =", product);
@@ -37,8 +48,15 @@ export default function PaymentScreen({
     useState('UPI');
 
   const placeOrder = async () => {
-    console.log("Pay Butoon Clicked");  
-    
+  console.log("Pay Button Clicked");
+
+  // Membership Flow
+  if (isMembership) {
+    await handleMembershipPayment();
+    return;
+  }
+
+  // Order Flow
   if (selectedPayment === "COD") {
     navigation.navigate("OrderSuccess");
     return;
@@ -46,12 +64,15 @@ export default function PaymentScreen({
 
   await handleCreatePaymentOrder();
 };
+
   const handleCreatePaymentOrder = async () => {
   try {
     
     const response = await createOrder(
       "ORDER_" + Date.now(),
       totalAmount,
+      isMembership ? "membership" : "order",
+      membershipPlan?.id || null,
     );
     
     console.log("RESPONSE =", response);
@@ -63,7 +84,9 @@ if (!response?.data?.razorpayOrder) {
 
 const razorpayOrder = response.data.razorpayOrder;
     const options = {
-      description: "ManaGanuga Order Payment",
+      description: isMembership
+      ? "ManaGanuga Membership"
+      : "ManaGanuga Order Payment",
       image: "",
       currency: "INR",
       key: "rzp_live_TDluPzhj49kPM5",
@@ -94,6 +117,8 @@ const razorpayOrder = response.data.razorpayOrder;
           razorpay_order_id: data.razorpay_order_id,
           razorpay_payment_id: data.razorpay_payment_id,
           razorpay_signature: data.razorpay_signature,
+          paymentType: isMembership ? "MEMBERSHIP" : "ORDER",
+          membershipPlanId: membershipPlan?.id,
           buyNow,
           productId: product?.id,
           quantity: 1,
@@ -141,6 +166,9 @@ if (verifyData.success) {
   Alert.alert("Error", JSON.stringify(error));
   }
 };
+const handleMembershipPayment = async () => {
+  await handleCreatePaymentOrder();
+};
 
   return (
     <SafeAreaView style={styles.container}>
@@ -152,36 +180,54 @@ if (verifyData.success) {
 
         <View style={styles.header}>
           <Text style={styles.stepText}>
-            Step 3 of 3
+            {isMembership ? "Step 2 of 2" : "Step 3 of 3"}
           </Text>
 
           <Text style={styles.title}>
-            Payments
+             {isMembership ? "Membership Payment" : "Payments"}
           </Text>
         </View>
 
-        <View style={styles.amountCard}>
-          <Text style={styles.amountLabel}>
-            Total Amount
-          </Text>
+        {isMembership && (
+          <View style={styles.offerCard}>
+            <Text style={styles.offerTitle}>
+               👑 {membershipPlan?.name}
+            </Text>
 
-          <Text style={styles.amount}>
-            ₹{totalAmount}
-          </Text>
-        </View>
+            <Text style={styles.offerText}>
+              Price : ₹{membershipPlan?.price}
+            </Text>
 
-        <View style={styles.offerCard}>
-          <Text style={styles.offerTitle}>
-            5% Cashback
-          </Text>
+            <Text style={styles.offerText}>
+              Discount : {membershipPlan?.discount}%
+            </Text>
 
-          <Text style={styles.offerText}>
-            Claim with payment offers
-          </Text>
-        </View>
+            <Text style={styles.offerText}>
+              Wallet Bonus : ₹{membershipPlan?.walletAmount}
+            </Text>
+
+            <Text style={styles.offerText}>
+              Monthly Claim : ₹{membershipPlan?.monthlyClaim}
+            </Text>
+
+            <Text style={styles.offerText}>
+              Validity : 1 Year
+            </Text>
+          </View>
+        )}
+        {!isMembership && (
+          <View style={styles.offerCard}>
+            
+            <Text style={styles.offerText}>
+              Claim with payment offers
+            </Text>
+          </View>
+        )}
 
         <Text style={styles.section}>
-          Recommended For You
+          {isMembership
+          ? "Choose Payment Method"
+          : "Recommended For You"}
         </Text>
 
         <TouchableOpacity
@@ -222,42 +268,71 @@ if (verifyData.success) {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.paymentCard}
-          onPress={() => setSelectedPayment('COD')}
-        >
-          <Text style={styles.paymentTitle}>
-            Cash On Delivery
-          </Text>
+        {!isMembership && (
+           <TouchableOpacity
+            style={styles.paymentCard}
+            onPress={() => setSelectedPayment("COD")}
+            >
+             <Text style={styles.paymentTitle}>
+              Cash On Delivery
+             </Text>
 
-          <Text style={styles.paymentSub}>
-            Pay when order arrives
-          </Text>
+             <Text style={styles.paymentSub}>
+              Pay when order arrives
+             </Text>
 
-          <Text style={styles.radio}>
-            {selectedPayment === 'COD'
-              ? '🔘'
-              : '⚪'}
-          </Text>
-        </TouchableOpacity>
+             <Text style={styles.radio}>
+              {selectedPayment === "COD" ? "🔘" : "⚪"}
+             </Text>
+            </TouchableOpacity>
+        )}
 
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <Text style={styles.bottomAmount}>
-          ₹{totalAmount}
+
+  {isMembership ? (
+
+    <>
+      <TouchableOpacity
+        style={styles.cancelButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Text style={styles.cancelText}>
+          Cancel
         </Text>
+      </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.payButton}
-          onPress={placeOrder}
-        >
-          <Text style={styles.payText}>
-            Pay ₹{totalAmount}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        style={styles.payButton}
+        onPress={placeOrder}
+      >
+        <Text style={styles.payText}>
+          Activate ₹{totalAmount}
+        </Text>
+      </TouchableOpacity>
+    </>
 
+  ) : (
+
+    <>
+      <Text style={styles.bottomAmount}>
+        ₹{totalAmount}
+      </Text>
+
+      <TouchableOpacity
+        style={styles.payButton}
+        onPress={placeOrder}
+      >
+        <Text style={styles.payText}>
+          Pay ₹{totalAmount}
+        </Text>
+      </TouchableOpacity>
+    </>
+
+  )}
+
+</View>
     </SafeAreaView>
   );
 }
@@ -360,6 +435,7 @@ const styles = StyleSheet.create({
     padding: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: 20,
     alignItems: 'center',
     elevation: 10,
   },
@@ -370,14 +446,33 @@ const styles = StyleSheet.create({
   },
 
   payButton: {
-    backgroundColor: '#F59E0B',
-    paddingHorizontal: 35,
-    paddingVertical: 15,
-    borderRadius: 10,
-  },
+  backgroundColor: '#F59E0B',
+  width: 220,
+  height: 50,
+  borderRadius: 10,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
 
   payText: {
     fontSize: 18,
     fontWeight: '700',
   },
+  cancelButton: {
+  flex: 1,
+  backgroundColor: "#FFFFFF",
+  borderWidth: 1,
+  borderColor: "#C8942E",
+  height: 50,
+  borderRadius: 10,
+  justifyContent: "center",
+  alignItems: "center",
+  marginRight: 10,
+},
+
+cancelText: {
+  color: "#C8942E",
+  fontSize: 18,
+  fontWeight: "700",
+},
 });

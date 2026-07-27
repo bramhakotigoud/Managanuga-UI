@@ -198,6 +198,7 @@ const loadAddress = async () => {
           style={styles.button}
           onPress={() => {
             navigation.navigate('Payment',{
+              type: 'order',
               buyNow,
               product,
             });

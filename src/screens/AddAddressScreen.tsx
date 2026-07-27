@@ -24,6 +24,7 @@ export default function AddAddressScreen({navigation}: any) {
   const [state, setState] = useState('');
   const [pincode, setPincode] = useState('');
   const [addressType, setAddressType] = useState('Home');
+  
   useEffect(() => {
   if (editData) {
     setName(editData.name || '');

@@ -22,6 +22,9 @@ const LoginScreen = () => {
     const [mobile, setMobile] = useState('');
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
+    const [loginType, setLoginType] = useState<'user' | 'admin' | null>(null);
+    const [adminId, setAdminId] = useState('');
+    const [adminPassword, setAdminPassword] = useState('')
     const navigation = useNavigation();
     const route = useRoute<any>();
     useEffect(() => {
@@ -67,12 +70,44 @@ const LoginScreen = () => {
           <Text style={styles.subHeading}>
             Sign in to your Mana Ganuga account
           </Text>
+          <View style={styles.loginTypeContainer}>
+            <TouchableOpacity
+             style={[
+               styles.loginTypeButton,
+               loginType === 'user' && styles.activeLoginType,
+               ]}
+               onPress={() => setLoginType('user')}>
+               <Text
+                style={[
+                  styles.loginTypeText,
+                  loginType === 'user' && styles.activeLoginTypeText,
+                ]}>
+                User
+               </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+               style={[
+                styles.loginTypeButton,
+                loginType === 'admin' && styles.activeLoginType,
+                ]}
+                onPress={() => setLoginType('admin')}>
+                <Text
+                style={[
+                 styles.loginTypeText,
+                 loginType === 'admin' && styles.activeLoginTypeText,
+                 ]}>
+                 Admin
+                </Text>
+               </TouchableOpacity>
+              </View>
 
-          <TextInput
-            placeholder="Mobile Number"
-            keyboardType="phone-pad"
-             value={mobile}
-             onChangeText={(text) => {
+          {loginType === 'user' && (
+            <>
+            <TextInput
+              placeholder="Mobile Number"
+              keyboardType="phone-pad"
+              value={mobile}
+              onChangeText={(text) => {
               setMobile(text.replace(/[^0-9]/g, ''));
              }}
              maxLength={10}
@@ -137,12 +172,44 @@ const LoginScreen = () => {
               Continue as Guest
             </Text>
           </TouchableOpacity>
-        </View>
-
-       
-
+          </>
+          )}
         
+        {loginType === 'admin' && (
+  <>
+    <TextInput
+      placeholder="Admin ID"
+      value={adminId}
+      onChangeText={setAdminId}
+      placeholderTextColor="#888"
+      style={styles.input}
+    />
 
+    <TextInput
+      placeholder="Password"
+      value={adminPassword}
+      onChangeText={setAdminPassword}
+      secureTextEntry
+      placeholderTextColor="#888"
+      style={styles.input}
+    />
+
+    <TouchableOpacity
+      style={styles.loginButton}
+      onPress={() => {
+        if (adminId === 'admin' && adminPassword === '123456') {
+          navigation.navigate('AdminDashboard' as never);
+        } else {
+          Alert.alert('Error', 'Invalid Admin Credentials');
+        }
+      }}>
+      <Text style={styles.loginButtonText}>
+        LOGIN
+      </Text>
+    </TouchableOpacity>
+  </>
+)}
+</View>
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerTitle}>
@@ -241,7 +308,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  loginText: {
+  loginButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '700',
@@ -294,4 +361,31 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
+  loginTypeContainer: {
+  flexDirection: 'row',
+  marginBottom: 20,
+  backgroundColor: '#F4F1EA',
+  borderRadius: 14,
+  padding: 4,
+},
+
+loginTypeButton: {
+  flex: 1,
+  paddingVertical: 12,
+  alignItems: 'center',
+  borderRadius: 10,
+},
+
+activeLoginType: {
+  backgroundColor: '#A84B21',
+},
+
+loginTypeText: {
+  fontWeight: '600',
+  color: '#555',
+},
+
+activeLoginTypeText: {
+  color: '#FFF',
+},
 });

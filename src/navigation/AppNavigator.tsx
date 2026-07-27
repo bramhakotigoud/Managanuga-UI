@@ -15,6 +15,8 @@ import CheckoutScreen from '../screens/CheckoutScreen';
 import OrderSuccessScreen from '../screens/OrderSuccessScreen';
 import PaymentScreen from '../screens/PaymentScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
+import AdminDashboard from '../screens/AdminDashboard';
+import OrderDetailsScreen from '../screens/OrdersDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -73,6 +75,16 @@ export default function AppNavigator() {
         <Stack.Screen
           name="Subscription"
           component={SubscriptionScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="AdminDashboard"
+          component={AdminDashboard}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="OrderDetails"
+          component={OrderDetailsScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

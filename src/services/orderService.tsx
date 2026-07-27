@@ -35,3 +35,26 @@ export const getOrders = async (
 
   return await response.json();
 };
+export const getOrderById = async (orderId: number) => {
+  const response = await fetch(
+    `${BASE_URL}/orders/${orderId}`
+  );
+
+  return await response.json();
+};
+
+export const getOrderItems = async (orderId: number) => {
+  const response = await fetch(
+    `${BASE_URL}/orders/${orderId}/items`
+  );
+
+  return await response.json();
+};
+
+export const getOrderTracking = async (orderId: number) => {
+  const response = await fetch(
+    `${BASE_URL}/orders/${orderId}/track`
+  );
+
+  return await response.json();
+};
