@@ -1,12 +1,12 @@
 import React from 'react';
 import {Text} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { HeaderCartButton } from '../screens/HomeScreen';
 
 import HomeScreen from '../screens/HomeScreen';
 import ProductsScreen from '../screens/ProductsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import CartScreen from '../screens/CartScreen';
 import LoginScreen from '../screens/LoginScreen';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,7 +18,18 @@ export default function BottomTabs() {
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
+        // Show top header with live Cart Badge across all tabs
         headerShown: false,
+        headerRight: () => <HeaderCartButton />,
+        headerStyle: {
+          backgroundColor: '#F8F4EC',
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTintColor: '#2D341F',
+        headerTitleStyle: {
+          fontWeight: '700',
+        },
 
         tabBarActiveTintColor: '#A84B21',
         tabBarInactiveTintColor: '#999',
@@ -42,10 +53,10 @@ export default function BottomTabs() {
 
           if (route.name === 'Products') {
             icon = '🛍️';
-          } else if (route.name === 'Orders') {
-            icon = '📦';
           } else if (route.name === 'Profile') {
             icon = '👤';
+          } else if (route.name === 'Orders') {
+            icon = '📦';
           } else if (route.name === 'More') {
             icon = '☰';
           }
@@ -62,19 +73,16 @@ export default function BottomTabs() {
         },
       })}>
       
+      {/* Hide header on Home because HomeScreen has its own built-in top header */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
+        options={{ headerShown: false }}
       />
 
       <Tab.Screen
         name="Products"
         component={ProductsScreen}
-      />
-
-      <Tab.Screen
-        name="Orders"
-        component={OrdersScreen}
       />
 
       <Tab.Screen
@@ -87,12 +95,13 @@ export default function BottomTabs() {
       />
 
       <Tab.Screen
-        name="More"
-        component={ProfileScreen}
+        name="Orders"
+        component={OrdersScreen}
       />
+
       <Tab.Screen
-        name="Cart"
-        component={CartScreen}
+        name="More"
+        component={ProductsScreen}
       />
 
     </Tab.Navigator>
