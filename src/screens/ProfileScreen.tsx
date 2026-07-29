@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 
 export default function ProfileScreen({navigation}: any) {
-  const {isLoggedIn, logout} = useAuth();
+const {isLoggedIn, user, logout} = useAuth();
   console.log('isLoggedIn =', isLoggedIn);
   if (!isLoggedIn) {
   return (
@@ -66,13 +66,12 @@ export default function ProfileScreen({navigation}: any) {
 
 
 <Text style={styles.name}>
-  Purushottam
+  {user?.username || "User"}
 </Text>
 
 <Text style={styles.mobile}>
-  +91 9876543210
+  +91 {user?.mobile || user?.mobile_no || ""}
 </Text>
-
 
 
 <Text style={styles.sectionTitle}>Account</Text>

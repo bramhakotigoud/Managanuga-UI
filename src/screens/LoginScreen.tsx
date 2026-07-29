@@ -2,7 +2,11 @@ import {useAuth} from '../context/AuthContext';
 import {useNavigation} from '@react-navigation/native';
 import React, {useState, useEffect} from 'react';
 import { useRoute } from '@react-navigation/native';
-import {sendOtp, verifyOtp} from '../services/authService';
+import {
+  sendOtp,
+  verifyOtp,
+  loginWithPassword,
+} from '../services/authService';
 import {
   View,
   Text,
@@ -15,16 +19,16 @@ import {
   Alert,
 } from 'react-native';
 
-import ProductItem from '../components/ProductItem';
+
 
 const LoginScreen = () => {
   const {login} = useAuth();
     const [mobile, setMobile] = useState('');
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
-    const [loginType, setLoginType] = useState<'user' | 'admin' | null>(null);
-    const [adminId, setAdminId] = useState('');
-    const [adminPassword, setAdminPassword] = useState('')
+    const [loginMode, setLoginMode] = useState("mobile");
+    const [password, setPassword] = useState("");
+    const [otpError, setOtpError] = useState("");
     const navigation = useNavigation();
     const route = useRoute<any>();
     useEffect(() => {
@@ -70,38 +74,8 @@ const LoginScreen = () => {
           <Text style={styles.subHeading}>
             Sign in to your Mana Ganuga account
           </Text>
-          <View style={styles.loginTypeContainer}>
-            <TouchableOpacity
-             style={[
-               styles.loginTypeButton,
-               loginType === 'user' && styles.activeLoginType,
-               ]}
-               onPress={() => setLoginType('user')}>
-               <Text
-                style={[
-                  styles.loginTypeText,
-                  loginType === 'user' && styles.activeLoginTypeText,
-                ]}>
-                User
-               </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-               style={[
-                styles.loginTypeButton,
-                loginType === 'admin' && styles.activeLoginType,
-                ]}
-                onPress={() => setLoginType('admin')}>
-                <Text
-                style={[
-                 styles.loginTypeText,
-                 loginType === 'admin' && styles.activeLoginTypeText,
-                 ]}>
-                 Admin
-                </Text>
-               </TouchableOpacity>
-              </View>
+       
 
-          {loginType === 'user' && (
             <>
             <TextInput
               placeholder="Mobile Number"
@@ -114,101 +88,156 @@ const LoginScreen = () => {
             placeholderTextColor="#888"
             style={styles.input}
           />
-          {otpSent && (
-            <TextInput
-              placeholder="Enter OTP"
-              keyboardType="number-pad"
-               value={otp}
-               onChangeText={setOtp}
-               maxLength={6}
-              placeholderTextColor="#888"
-              secureTextEntry
-              style={styles.input}
-            />
-          )}
+         {loginMode === "otp" && (
+  <TextInput
+    placeholder="Enter OTP"
+    keyboardType="number-pad"
+    value={otp}
+    onChangeText={setOtp}
+    maxLength={6}
+    placeholderTextColor="#888"
+    style={styles.input}
+  />
+)}
+{loginMode === "otp" && otpError !== "" && (
+  <Text style={styles.errorText}>
+    {otpError}
+  </Text>
+)}
+
+{loginMode === "password" && (
+  <TextInput
+    placeholder="Enter Password"
+    value={password}
+    onChangeText={setPassword}
+    placeholderTextColor="#888"
+    style={styles.input}
+  />
+)}
           <TouchableOpacity
            style={styles.loginButton}
-           onPress={async () => {
+         onPress={async () => {
   try {
-    if (!otpSent) {
+
+    // STEP 1 - Enter Mobile
+    if (loginMode === "mobile") {
+
       const response = await sendOtp(mobile);
+
+      if (response.existingUser) {
+        setLoginMode("password");
+        return;
+      }
 
       Alert.alert("OTP Sent", response.message);
 
-      if (response.message === "OTP sent successfully") {
-        setOtpSent(true);
-      }
-    } else {
+      setOtpSent(true);
+      setLoginMode("otp");
+
+      return;
+    }
+
+    // STEP 2 - Verify OTP
+    if (loginMode === "otp") { 
+
       const response = await verifyOtp(mobile, otp);
 
-      Alert.alert("Verification", response.message);
+// Invalid OTP
+if (!response.token) {
+  setOtpError(response.message || "Please enter a valid OTP");
+  return;
+}
 
-      if (response.token) {
-        login(
-          response.token,
-          response.user);
+// Clear previous error
+setOtpError("");
 
-        if (route.params?.fromCart) {
-          navigation.navigate('Cart' as never);
-        } else {
-          navigation.navigate('Home' as never);
-        }
-      }
+// Login successful
+login(response.token, response.user);
+
+if (route.params?.fromCart) {
+  navigation.navigate("Cart" as never);
+} else {
+  navigation.navigate("Home" as never);
+}
+
+return;
     }
-  } catch (err) {
+
+   
+   // STEP 3 - Login with Password
+if (loginMode === "password") {
+
+  const response = await loginWithPassword(
+    mobile,
+    password
+  );
+
+  // Login failed
+  if (!response.token) {
+    Alert.alert(
+      "Login Failed",
+      response.message || "Invalid password"
+    );
+    return;
+  }
+
+  // Login successful
+  login(response.token, response.user);
+
+  if (route.params?.fromCart) {
+    navigation.navigate("Cart" as never);
+  } else {
+    navigation.navigate("Home" as never);
+  }
+}
+
+  } catch (err: any) {
+
     console.log(err);
-    Alert.alert("Error", "Something went wrong");
+
+    Alert.alert(
+      "Error",
+      err?.response?.data?.message || "Something went wrong"
+    );
+
   }
 }}
            
           >
           <Text style={styles.loginButtonText}>
-            {otpSent ? 'LOGIN' : 'SEND OTP'}
+            {
+  loginMode === "mobile"
+    ? "NEXT"
+    : loginMode === "otp"
+    ? "VERIFY OTP"
+    : "LOGIN"
+}
           </Text>
           </TouchableOpacity>
-           
-          <TouchableOpacity>
-            <Text style={styles.guest}>
-              Continue as Guest
-            </Text>
-          </TouchableOpacity>
-          </>
-          )}
-        
-        {loginType === 'admin' && (
-  <>
-    <TextInput
-      placeholder="Admin ID"
-      value={adminId}
-      onChangeText={setAdminId}
-      placeholderTextColor="#888"
-      style={styles.input}
-    />
-
-    <TextInput
-      placeholder="Password"
-      value={adminPassword}
-      onChangeText={setAdminPassword}
-      secureTextEntry
-      placeholderTextColor="#888"
-      style={styles.input}
-    />
-
-    <TouchableOpacity
-      style={styles.loginButton}
-      onPress={() => {
-        if (adminId === 'admin' && adminPassword === '123456') {
-          navigation.navigate('AdminDashboard' as never);
-        } else {
-          Alert.alert('Error', 'Invalid Admin Credentials');
-        }
-      }}>
-      <Text style={styles.loginButtonText}>
-        LOGIN
-      </Text>
-    </TouchableOpacity>
-  </>
+         {loginMode === "otp" && otpError !== "" && (
+  <TouchableOpacity
+    onPress={() => {
+      setMobile("");
+      setOtp("");
+      setOtpSent(false);
+      setOtpError("");
+      setLoginMode("mobile");
+    }}
+  >
+    <View style={styles.loginAgainButton}>
+  <Text style={styles.loginAgainText}>
+    Login
+  </Text>
+</View>
+  </TouchableOpacity>
 )}
+
+           
+         
+          </>
+         
+        
+        
 </View>
         {/* Footer */}
         <View style={styles.footer}>
@@ -361,31 +390,52 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
   },
-  loginTypeContainer: {
-  flexDirection: 'row',
+  userContainer: {
   marginBottom: 20,
-  backgroundColor: '#F4F1EA',
-  borderRadius: 14,
-  padding: 4,
 },
 
-loginTypeButton: {
-  flex: 1,
-  paddingVertical: 12,
-  alignItems: 'center',
-  borderRadius: 10,
-},
-
-activeLoginType: {
+userButton: {
   backgroundColor: '#A84B21',
+  height: 50,
+  borderRadius: 15,
+  justifyContent: 'center',
+  alignItems: 'center',
 },
 
-loginTypeText: {
-  fontWeight: '600',
-  color: '#555',
-},
-
-activeLoginTypeText: {
+userButtonText: {
   color: '#FFF',
+  fontSize: 16,
+  fontWeight: '700',
 },
+errorText: {
+  color: "#D32F2F",
+  fontSize: 13,
+  textAlign: "center",
+  marginTop: 6,
+  marginBottom: 10,
+  fontWeight: "600",
+},
+
+loginLink: {
+  textAlign: "center",
+  color: "#B55323",
+  fontSize: 15,
+  fontWeight: "600",
+  marginTop: 12,
+},
+loginAgainButton: {
+  marginTop: 12,
+  backgroundColor: "#A84B21",
+  height: 42,
+  borderRadius: 15,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+loginAgainText: {
+  color: "#FFF",
+  fontSize: 15,
+  fontWeight: "700",
+},
+
 });
