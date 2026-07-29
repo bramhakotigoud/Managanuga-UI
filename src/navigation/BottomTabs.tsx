@@ -84,7 +84,6 @@ export default function BottomTabs() {
         name="Products"
         component={ProductsScreen}
       />
-
       <Tab.Screen
         name="Profile"
         component={
@@ -103,7 +102,7 @@ export default function BottomTabs() {
         name="More"
         component={ProductsScreen}
       />
-
+      
     </Tab.Navigator>
   );
 }
