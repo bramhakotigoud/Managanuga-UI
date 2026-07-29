@@ -282,12 +282,10 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
   },
-
   checkoutText: {
     color: '#FFF',
     fontWeight: '700',
   },
-
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',

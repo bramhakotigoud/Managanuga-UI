@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import { HeaderCartButton } from './HomeScreen';
 
 const ProductsScreen = () => {
   const {addToCart} = useCart();
@@ -91,10 +92,11 @@ const ProductsScreen = () => {
 
           <View style={styles.headerIcons}>
             <Text style={styles.icon}>🔔</Text>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => navigation.navigate('Cart')}>
               <Text style={styles.icon}>🛒</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
+            <HeaderCartButton />
           </View>
             
 
