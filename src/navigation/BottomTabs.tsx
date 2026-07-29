@@ -6,7 +6,6 @@ import HomeScreen from '../screens/HomeScreen';
 import ProductsScreen from '../screens/ProductsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import CartScreen from '../screens/CartScreen';
 import LoginScreen from '../screens/LoginScreen';
 import { useAuth } from '../context/AuthContext';
 
@@ -71,12 +70,6 @@ export default function BottomTabs() {
         name="Products"
         component={ProductsScreen}
       />
-
-      <Tab.Screen
-        name="Orders"
-        component={OrdersScreen}
-      />
-
       <Tab.Screen
         name="Profile"
         component={
@@ -87,14 +80,15 @@ export default function BottomTabs() {
       />
 
       <Tab.Screen
-        name="More"
-        component={ProfileScreen}
-      />
-      <Tab.Screen
-        name="Cart"
-        component={CartScreen}
+        name="Orders"
+        component={OrdersScreen}
       />
 
+      <Tab.Screen
+        name="More"
+        component={ProductsScreen}
+      />
+      
     </Tab.Navigator>
   );
 }
