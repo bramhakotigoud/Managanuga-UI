@@ -11,13 +11,24 @@ import {
   ActivityIndicator,
   Image,
   StyleSheet,
+  StatusBar,
 } from "react-native";
 
+import { useCart } from "../context/CartContext";
 import { getOrders } from "../services/orderService";
 
 export default function OrdersScreen({
   navigation,
 }: any) {
+  const { cartItems } = useCart();
+
+  // Calculate cart count safely
+  const cartCount =
+    cartItems?.reduce((total: number, item: any) => {
+      const q = item.quantity ?? item.qty ?? item.count ?? 1;
+      return total + Number(q);
+    }, 0) || cartItems?.length || 0;
+
   const [orders, setOrders] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,10 +57,7 @@ export default function OrdersScreen({
 
   const loadOrders = async () => {
     try {
-      const response = await getOrders(
-        "USER",
-        1,
-      );
+      const response = await getOrders("USER", 1);
 
       if (response.success) {
         setOrders(response.data);
@@ -62,9 +70,27 @@ export default function OrdersScreen({
     }
   };
 
-  const getStatusColor = (
-    status: string,
-  ) => {
+  // Helper function to resolve remote images or fallbacks correctly
+  const getImageSource = (imagePath: string) => {
+    if (!imagePath) {
+      return require("../assets/images/sunflower.png"); // Default fallback asset
+    }
+
+    // Handle full http/https URLs
+    if (imagePath.startsWith("http")) {
+      return { uri: imagePath };
+    }
+
+    // Clean slashes to avoid double slashes like //uploads//
+    const cleanPath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+    const finalPath = cleanPath.startsWith("uploads")
+      ? cleanPath
+      : `uploads/${cleanPath}`;
+
+    return { uri: `${BASE_URL}/${finalPath}` };
+  };
+
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "DELIVERED":
         return "#2E7D32";
@@ -87,13 +113,8 @@ export default function OrdersScreen({
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loader}>
-          <ActivityIndicator
-            size="large"
-            color="#D4A017"
-          />
-          <Text style={styles.loadingText}>
-            Loading Orders...
-          </Text>
+          <ActivityIndicator size="large" color="#D4A017" />
+          <Text style={styles.loadingText}>Loading Orders...</Text>
         </View>
       </SafeAreaView>
     );
@@ -101,162 +122,135 @@ export default function OrdersScreen({
 
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar backgroundColor="#F8F4EE" barStyle="dark-content" />
 
+      {/* FIXED BRAND HEADER (NO BACK BUTTON) */}
       <View style={styles.header}>
+        <View style={styles.logoSection}>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={styles.logo}
+          />
+          <View style={styles.brandTextContainer}>
+            <Text style={styles.appName}>Mana Ganuga</Text>
+            <Text style={styles.tagline}>Pure Tradition • Healthy Future</Text>
+          </View>
+        </View>
 
-        <Text style={styles.title}>
-          My Orders
-        </Text>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate("Notifications")}>
+            <Text style={styles.headerIconText}>🔔</Text>
+          </TouchableOpacity>
 
-        <Text style={styles.subtitle}>
-          {filteredOrders.length} Orders
-        </Text>
-
+          <TouchableOpacity
+            style={styles.cartIconWrapper}
+            onPress={() => navigation.navigate("Cart")}>
+            <Text style={styles.headerIconText}>🛒</Text>
+            {Boolean(cartCount) && cartCount > 0 ? (
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>
+                  {cartCount > 99 ? "99+" : cartCount}
+                </Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <View style={styles.searchBox}>
+      {/* SUB-HEADER & SEARCH SECTION */}
+      <View style={styles.subHeaderSection}>
+        <Text style={styles.title}>
+          My Orders ({orders.length})
+        </Text>
 
-        <TextInput
-          placeholder="Search Order"
-          value={search}
-          onChangeText={setSearch}
-          style={styles.input}
-        />
-
+        <View style={styles.searchBox}>
+          <TextInput
+            placeholder="Search Order"
+            value={search}
+            onChangeText={setSearch}
+            style={styles.input}
+          />
+        </View>
       </View>
 
       {filteredOrders.length === 0 ? (
-
         <View style={styles.emptyBox}>
-
-          <Text style={styles.emptyEmoji}>
-            📦
-          </Text>
-
-          <Text style={styles.emptyTitle}>
-            No Orders Found
-          </Text>
-
+          <Text style={styles.emptyEmoji}>📦</Text>
+          <Text style={styles.emptyTitle}>No Orders Found</Text>
           <Text style={styles.emptySub}>
             Your placed orders will appear here.
           </Text>
-
         </View>
-
       ) : (
-
         <FlatList
           data={filteredOrders}
           keyExtractor={(item: any, index) =>
-          `${item.id}-${item.product_name}-${index}`
-           }
-
+            `${item.id}-${item.product_name}-${index}`
+          }
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             padding: 15,
             paddingBottom: 120,
           }}
           renderItem={({ item }: any) => (
-
             <TouchableOpacity
               activeOpacity={0.85}
               style={styles.card}
               onPress={() =>
-                navigation.navigate(
-                  "OrderDetails",
-                  {
-                    orderId: item.id,
-                  },
-                )
-              }
-            >
-
+                navigation.navigate("OrderDetails", {
+                  orderId: item.id,
+                })
+              }>
               <View style={styles.cardTop}>
-
+                {/* Product Image with robust source handling */}
                 <Image
-                  source={{
-                    uri: `${BASE_URL}/uploads/${item.image}`,
-                  }}
+                  source={getImageSource(item.image || item.product_image)}
                   style={styles.image}
                 />
 
                 <View style={styles.info}>
-                <Text style={styles.productTitle}>
-                    Order #{item.id}
-                  </Text>
+                  <Text style={styles.productTitle}>Order #{item.id}</Text>
 
                   <Text style={styles.productSubTitle}>
                     Tap to view ordered products
                   </Text>
 
-                  <Text style={styles.amount}>
-                    ₹{item.total_amount}
-                  </Text>
+                  <Text style={styles.amount}>₹{item.total_amount}</Text>
 
                   <View
                     style={[
                       styles.statusBadge,
                       {
-                        backgroundColor:
-                          getStatusColor(
-                            item.status,
-                          ),
+                        backgroundColor: getStatusColor(item.status),
                       },
-                    ]}
-                  >
-                    <Text
-                      style={styles.statusText}
-                    >
-                      {item.status}
-                    </Text>
+                    ]}>
+                    <Text style={styles.statusText}>{item.status}</Text>
                   </View>
 
                   <Text style={styles.orderDate}>
                     {item.created_at
-                      ? new Date(
-                          item.created_at,
-                        ).toDateString()
+                      ? new Date(item.created_at).toDateString()
                       : ""}
                   </Text>
-
                 </View>
 
-                <Text style={styles.arrow}>
-                  ❯
-                </Text>
-
+                <Text style={styles.arrow}>❯</Text>
               </View>
 
-              <View
-                style={styles.divider}
-              />
+              <View style={styles.divider} />
 
-              <View
-                style={styles.bottomRow}
-              >
-
-                <Text
-                  style={styles.viewText}
-                >
-                  View Details
+              <View style={styles.bottomRow}>
+                <Text style={styles.viewText}>View Details</Text>
+                <Text style={styles.itemsText}>
+                  Tap to view products, address & payment
                 </Text>
-
-                <Text
-                  style={styles.itemsText}
-                >
-                  Tap to view products,
-                  address & payment
-                </Text>
-
               </View>
-
             </TouchableOpacity>
-
           )}
         />
-
       )}
-
     </SafeAreaView>
   );
 }
@@ -280,42 +274,121 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
+  /* Fixed Header Styles */
   header: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 15,
-    elevation: 3,
+    backgroundColor: "#F8F4EE",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    zIndex: 10,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+
+  logoSection: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  logo: {
+    width: 34,
+    height: 34,
+    resizeMode: "contain",
+    marginRight: 8,
+  },
+
+  brandTextContainer: {
+    justifyContent: "center",
+  },
+
+  appName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#2D341F",
+  },
+
+  tagline: {
+    fontSize: 9,
+    color: "#8C8C8C",
+    fontWeight: "500",
+    marginTop: 1,
+  },
+
+  headerIcons: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  iconButton: {
+    marginLeft: 10,
+    padding: 4,
+  },
+
+  cartIconWrapper: {
+    marginLeft: 10,
+    padding: 4,
+    position: "relative",
+  },
+
+  headerIconText: {
+    fontSize: 18,
+  },
+
+  badgeContainer: {
+    position: "absolute",
+    top: -2,
+    right: -4,
+    backgroundColor: "#A84B21",
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 3,
+  },
+
+  badgeText: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700",
+  },
+
+  /* Sub Header & Search Box Styles */
+  subHeaderSection: {
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 5,
   },
 
   title: {
-    fontSize: 30,
+    fontSize: 20,
     fontWeight: "700",
-    color: "#222",
-  },
-
-  subtitle: {
-    marginTop: 5,
-    fontSize: 15,
-    color: "#777",
+    color: "#2D341F",
+    marginBottom: 8,
   },
 
   searchBox: {
-    backgroundColor: "#F8F4EE",
-    paddingHorizontal: 15,
-    paddingVertical: 12,
+    marginVertical: 4,
   },
 
   input: {
-    backgroundColor: "#F3F3F3",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     paddingHorizontal: 15,
-    height: 48,
-    fontSize: 15,
+    height: 44,
+    fontSize: 14,
     color: "#222",
+    elevation: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
 
   emptyBox: {
@@ -331,27 +404,28 @@ const styles = StyleSheet.create({
 
   emptyTitle: {
     marginTop: 15,
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: "700",
     color: "#222",
   },
 
   emptySub: {
     marginTop: 8,
-    fontSize: 15,
+    fontSize: 14,
     textAlign: "center",
     color: "#777",
   },
 
   card: {
-    backgroundColor: "#F8F4EE",
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 15,
     marginBottom: 15,
-    elevation: 3,
+    elevation: 2,
     shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
   },
 
   cardTop: {
@@ -373,46 +447,46 @@ const styles = StyleSheet.create({
   },
 
   productTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700",
     color: "#222",
   },
 
   productSubTitle: {
     marginTop: 4,
-    fontSize: 14,
+    fontSize: 13,
     color: "#777",
   },
 
   amount: {
-    marginTop: 8,
-    fontSize: 22,
+    marginTop: 6,
+    fontSize: 20,
     fontWeight: "700",
     color: "#D4A017",
   },
 
   statusBadge: {
     alignSelf: "flex-start",
-    marginTop: 10,
+    marginTop: 8,
     borderRadius: 20,
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 4,
   },
 
   statusText: {
     color: "#FFFFFF",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "700",
   },
 
   orderDate: {
-    marginTop: 8,
-    fontSize: 13,
+    marginTop: 6,
+    fontSize: 12,
     color: "#777",
   },
 
   arrow: {
-    fontSize: 24,
+    fontSize: 20,
     color: "#999",
     marginLeft: 10,
   },
@@ -420,7 +494,7 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: "#ECECEC",
-    marginVertical: 15,
+    marginVertical: 12,
   },
 
   bottomRow: {
@@ -428,14 +502,14 @@ const styles = StyleSheet.create({
   },
 
   viewText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     color: "#1565C0",
   },
 
   itemsText: {
-    marginTop: 5,
-    fontSize: 13,
+    marginTop: 3,
+    fontSize: 12,
     color: "#777",
   },
 });

@@ -18,9 +18,6 @@ import {
   ImageBackground,
   Alert,
 } from 'react-native';
-
-
-
 const LoginScreen = () => {
   const {login} = useAuth();
     const [mobile, setMobile] = useState('');

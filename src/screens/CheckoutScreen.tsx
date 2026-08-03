@@ -8,7 +8,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Alert,
   Image,
 } from 'react-native';
 
@@ -16,44 +15,97 @@ export default function CheckoutScreen({
   navigation,
   route,
 }: any) {
-  const [paymentMethod, setPaymentMethod] = useState('COD');
   const { cartItems, getCartTotal } = useCart();
   const buyNow = route?.params?.buyNow;
   const product = route?.params?.product;
-  console.log(cartItems);
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
+
+  // Calculate cart count safely for header
+  const cartCount =
+    cartItems?.reduce((total: number, item: any) => {
+      const q = item.quantity ?? item.qty ?? item.count ?? 1;
+      return total + Number(q);
+    }, 0) || cartItems?.length || 0;
+
+  // Calculate total items for current checkout order
+  const checkoutItems = buyNow ? [product] : cartItems;
+  const totalItemsCount = checkoutItems.reduce((sum: number, item: any) => {
+    const q = item.quantity ?? item.qty ?? item.count ?? 1;
+    return sum + Number(q);
+  }, 0);
+
   useEffect(() => {
-  const unsubscribe = navigation.addListener('focus', () => {
-    loadAddress();
-  });
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadAddress();
+    });
 
-  return unsubscribe;
-}, [navigation]);
+    return unsubscribe;
+  }, [navigation]);
 
-const loadAddress = async () => {
-  const data = await AsyncStorage.getItem('addresses');
+  const loadAddress = async () => {
+    const data = await AsyncStorage.getItem('addresses');
 
-  if (data) {
-    const addresses = JSON.parse(data);
+    if (data) {
+      const addresses = JSON.parse(data);
 
-    const defaultAddress = addresses.find(
-      (item: any) => item.isDefault
-    );
+      const defaultAddress = addresses.find(
+        (item: any) => item.isDefault
+      );
 
-    setSelectedAddress(defaultAddress);
-  }
-};
+      setSelectedAddress(defaultAddress);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 100 }}
-    >
+      {/* FIXED BRAND HEADER WITH BACK BUTTON, LOGO, BELL & CART BADGE */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Text style={styles.backIcon}>‹</Text>
+        </TouchableOpacity>
 
-        <Text style={styles.title}>
-          Checkout
-        </Text>
+        <View style={styles.logoSection}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
+          <View style={styles.brandTextContainer}>
+            <Text style={styles.appName}>Mana Ganuga</Text>
+            <Text style={styles.tagline}>Pure Tradition • Healthy Future</Text>
+          </View>
+        </View>
+
+        <View style={styles.headerIcons}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => navigation.navigate('Notifications')}>
+            <Text style={styles.headerIconText}>🔔</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.cartIconWrapper}
+            onPress={() => navigation.navigate('Cart')}>
+            <Text style={styles.headerIconText}>🛒</Text>
+            {Boolean(cartCount) && cartCount > 0 ? (
+              <View style={styles.badgeContainer}>
+                <Text style={styles.badgeText}>
+                  {cartCount > 99 ? '99+' : cartCount}
+                </Text>
+              </View>
+            ) : null}
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100, paddingHorizontal: 20, paddingTop: 10 }}
+      >
+        <Text style={styles.title}>Checkout</Text>
+
         <View style={styles.stepContainer}>
           <View style={styles.activeStep}>
             <Text style={styles.stepNumber}>1</Text>
@@ -78,138 +130,111 @@ const loadAddress = async () => {
 
         {/* Address Card */}
         <View style={styles.card}>
-
-          <Text style={styles.heading}>
-            Delivery Address
-          </Text>
-          {!selectedAddress && (
-            <Text style={{ color: 'red' }}>
-                No default address selected
+          <Text style={styles.heading}>Delivery Address</Text>
+          
+          {!selectedAddress ? (
+            <Text style={{ color: 'red', marginVertical: 5 }}>
+              No default address selected
             </Text>
+          ) : (
+            <>
+              <Text style={styles.name}>{selectedAddress?.name}</Text>
+              <Text style={styles.address}>
+                {selectedAddress?.houseNo}, {selectedAddress?.street}
+              </Text>
+              <Text style={styles.address}>
+                {selectedAddress?.city}, {selectedAddress?.state} - {selectedAddress?.pincode}
+              </Text>
+              <Text style={styles.mobile}>{selectedAddress?.mobile}</Text>
+            </>
           )}
-          <Text style={styles.name}>
-           {selectedAddress?.name}
-          </Text>
-          <Text style={styles.address}>
-           {selectedAddress?.houseNo}, {selectedAddress?.street}
-          </Text>
-          <Text style={styles.address}>
-           {selectedAddress?.city}, {selectedAddress?.state} - {selectedAddress?.pincode}
-          </Text>
-          <Text style={styles.mobile}>
-           {selectedAddress?.mobile}
-          </Text>
+
           <TouchableOpacity
-          onPress={() =>navigation.navigate('AddressList', {
-            fromCheckout: true,
-          })
-        }>
+            onPress={() =>
+              navigation.navigate('AddressList', {
+                fromCheckout: true,
+              })
+            }>
             <Text style={styles.change}>
-              Change Address
+              {selectedAddress ? 'Change Address' : 'Select / Add Address'}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Order Summary */}
-        {(buyNow ? [product] : cartItems).map((item, index) => (
-  <View
-    key={index}
-    style={styles.productCard}
-  >
-    <View style={styles.productRow}>
+        {checkoutItems.map((item, index) => (
+          <View key={index} style={styles.productCard}>
+            <View style={styles.productRow}>
+              <Image source={item.image} style={styles.productImage} />
 
-      <Image
-        source={item.image}
-        style={styles.productImage}
-      />
+              <View style={styles.productDetails}>
+                <Text style={styles.productName}>{item.name}</Text>
 
-      <View style={styles.productDetails}>
+                <Text style={styles.productQty}>
+                  Qty: {item.quantity || 1}
+                </Text>
 
-        <Text style={styles.productName}>
-          {item.name}
-        </Text>
+                <Text style={styles.productPrice}>₹{item.price}</Text>
 
-        <Text style={styles.productQty}>
-          Qty: {item.quantity}
-        </Text>
+                <Text style={styles.deliveryText}>Delivery in 2 days</Text>
+              </View>
+            </View>
+          </View>
+        ))}
 
-        <Text style={styles.productPrice}>
-          ₹{item.price}
-        </Text>
-
-        <Text style={styles.deliveryText}>
-          Delivery in 2 days
-        </Text>
-
-      </View>
-
-    </View>
-  </View>
-))}
-       
+        {/* Price Details */}
         <View style={styles.priceCard}>
+          <Text style={styles.priceHeading}>Price Details</Text>
 
-  <Text style={styles.priceHeading}>
-    Price Details
-  </Text>
+          <View style={styles.priceRow}>
+            <Text>Total Items</Text>
+            <Text>{totalItemsCount} {totalItemsCount === 1 ? 'Item' : 'Items'}</Text>
+          </View>
 
-  <View style={styles.priceRow}>
-    <Text>Items Total</Text>
-    <Text>₹{buyNow ? product.price : getCartTotal()}</Text>
-  </View>
+          <View style={styles.priceRow}>
+            <Text>Items Cost</Text>
+            <Text>₹{buyNow ? product.price : getCartTotal()}</Text>
+          </View>
 
-  <View style={styles.priceRow}>
-    <Text>Delivery Charges</Text>
-    <Text>₹40</Text>
-  </View>
+          <View style={styles.priceRow}>
+            <Text>Delivery Charges</Text>
+            <Text>₹40</Text>
+          </View>
 
-  <View style={styles.priceRow}>
-    <Text style={styles.discountText}>
-      Discount
-    </Text>
+          <View style={styles.priceRow}>
+            <Text style={styles.discountText}>Discount</Text>
+            <Text style={styles.discountText}>₹0</Text>
+          </View>
 
-    <Text style={styles.discountText}>
-      ₹0
-    </Text>
-  </View>
+          <View style={styles.divider} />
 
-  <View style={styles.divider} />
+          <View style={styles.priceRow}>
+            <Text style={styles.finalTotal}>Total Amount</Text>
+            <Text style={styles.finalTotal}>
+              ₹{(buyNow ? product.price : getCartTotal()) + 40}
+            </Text>
+          </View>
 
-  <View style={styles.priceRow}>
-    <Text style={styles.finalTotal}>
-      Total Amount
-    </Text>
+          <View style={styles.saveBox}>
+            <Text style={styles.saveText}>
+              🎉 You'll save on this order!
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
 
-    <Text style={styles.finalTotal}>
-      ₹{(buyNow ? product.price : getCartTotal()) + 40}
-    </Text>
-  </View>
-
-  <View style={styles.saveBox}>
-    <Text style={styles.saveText}>
-      🎉 You'll save on this order!
-    </Text>
-  </View>
-
-</View>
- </ScrollView>
-        {/* Place Order */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => {
-            navigation.navigate('Payment',{
-              type: 'order',
-              buyNow,
-              product,
-            });
-          }}
-        >
-          <Text style={styles.buttonText}>
-            Continue
-          </Text>
-        </TouchableOpacity>
-
-      
+      {/* Place Order Button */}
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => {
+          navigation.navigate('Payment', {
+            type: 'order',
+            buyNow,
+            product,
+          });
+        }}>
+        <Text style={styles.buttonText}>Continue</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -218,13 +243,121 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F4EC',
-    padding: 20,
+  },
+
+  /* Fixed Top Header Styles */
+  header: {
+    backgroundColor: '#F8F4EC',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+
+  backIcon: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#2D341F',
+    marginTop: -2,
+  },
+
+  logoSection: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+
+  logo: {
+    width: 34,
+    height: 34,
+    resizeMode: 'contain',
+    marginRight: 8,
+  },
+
+  brandTextContainer: {
+    justifyContent: 'center',
+  },
+
+  appName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2D341F',
+  },
+
+  tagline: {
+    fontSize: 9,
+    color: '#8C8C8C',
+    fontWeight: '500',
+    marginTop: 1,
+  },
+
+  headerIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  iconButton: {
+    marginLeft: 10,
+    padding: 4,
+  },
+
+  cartIconWrapper: {
+    marginLeft: 10,
+    padding: 4,
+    position: 'relative',
+  },
+
+  headerIconText: {
+    fontSize: 18,
+  },
+
+  badgeContainer: {
+    position: 'absolute',
+    top: -2,
+    right: -4,
+    backgroundColor: '#A84B21',
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 3,
+  },
+
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '700',
   },
 
   title: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: '700',
-    marginBottom: 20,
+    marginBottom: 15,
+    marginTop: 5,
+    color: '#2D341F',
   },
 
   card: {
@@ -238,22 +371,22 @@ const styles = StyleSheet.create({
   heading: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 15,
+    marginBottom: 10,
     color: '#A84B21',
   },
 
   name: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
   },
 
   address: {
-    marginTop: 5,
+    marginTop: 4,
     color: '#666',
   },
 
   mobile: {
-    marginTop: 8,
+    marginTop: 6,
     fontWeight: '600',
   },
 
@@ -263,41 +396,19 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
 
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 8,
-  },
-
   divider: {
     borderBottomWidth: 1,
     borderBottomColor: '#DDD',
     marginVertical: 10,
   },
 
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-
-  total: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#A84B21',
-  },
-
-  option: {
-    fontSize: 16,
-    paddingVertical: 10,
-  },
-
   button: {
     backgroundColor: '#A84B21',
-    padding: 18,
+    padding: 16,
     borderRadius: 14,
     alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 30,
+    marginHorizontal: 20,
+    marginBottom: 20,
   },
 
   buttonText: {
@@ -305,155 +416,133 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  summaryRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginVertical: 8,
-},
 
-totalRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginTop: 15,
-  paddingTop: 15,
-  borderTopWidth: 1,
-  borderColor: '#ddd',
-},
+  stepContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
 
-totalText: {
-  fontSize: 20,
-  fontWeight: '700',
-},
+  activeStep: {
+    width: 35,
+    height: 35,
+    borderRadius: 20,
+    backgroundColor: '#2874F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-totalPrice: {
-  fontSize: 22,
-  fontWeight: '700',
-  color: '#A84B21',
-},
-stepContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: 10,
-},
+  inactiveStep: {
+    width: 35,
+    height: 35,
+    borderRadius: 20,
+    backgroundColor: '#DDD',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
-activeStep: {
-  width: 35,
-  height: 35,
-  borderRadius: 20,
-  backgroundColor: '#2874F0',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  line: {
+    width: 60,
+    height: 2,
+    backgroundColor: '#DDD',
+  },
 
-inactiveStep: {
-  width: 35,
-  height: 35,
-  borderRadius: 20,
-  backgroundColor: '#DDD',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  stepNumber: {
+    color: '#FFF',
+    fontWeight: '700',
+  },
 
-line: {
-  width: 60,
-  height: 2,
-  backgroundColor: '#DDD',
-},
+  stepLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 20,
+  },
 
-stepNumber: {
-  color: '#FFF',
-  fontWeight: '700',
-},
+  productCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 15,
+    padding: 15,
+    marginBottom: 15,
+  },
 
-stepLabels: {
-  flexDirection: 'row',
-  justifyContent: 'space-around',
-  marginBottom: 20,
-},
-productCard: {
-  backgroundColor: '#FFF',
-  borderRadius: 15,
-  padding: 15,
-  marginBottom: 15,
-},
+  productRow: {
+    flexDirection: 'row',
+  },
 
-productRow: {
-  flexDirection: 'row',
-},
+  productImage: {
+    width: 90,
+    height: 90,
+    borderRadius: 10,
+    resizeMode: 'contain',
+  },
 
-productImage: {
-  width: 90,
-  height: 90,
-  borderRadius: 10,
-  resizeMode: 'contain',
-},
+  productDetails: {
+    flex: 1,
+    marginLeft: 15,
+  },
 
-productDetails: {
-  flex: 1,
-  marginLeft: 15,
-},
+  productName: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
 
-productName: {
-  fontSize: 16,
-  fontWeight: '700',
-},
+  productQty: {
+    marginTop: 8,
+    color: '#666',
+  },
 
-productQty: {
-  marginTop: 10,
-  color: '#666',
-},
+  productPrice: {
+    marginTop: 6,
+    color: '#A84B21',
+    fontWeight: '700',
+    fontSize: 18,
+  },
 
-productPrice: {
-  marginTop: 10,
-  color: '#A84B21',
-  fontWeight: '700',
-  fontSize: 20,
-},
+  deliveryText: {
+    marginTop: 6,
+    color: 'green',
+  },
 
-deliveryText: {
-  marginTop: 10,
-  color: 'green',
-},
-priceCard: {
-  backgroundColor: '#FFF',
-  borderRadius: 18,
-  padding: 18,
-  marginBottom: 20,
-},
+  priceCard: {
+    backgroundColor: '#FFF',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 20,
+  },
 
-priceHeading: {
-  fontSize: 22,
-  fontWeight: '700',
-  marginBottom: 20,
-},
+  priceHeading: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 15,
+  },
 
-priceRow: {
-  flexDirection: 'row',
-  justifyContent: 'space-between',
-  marginVertical: 10,
-},
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 8,
+  },
 
-discountText: {
-  color: 'green',
-  fontWeight: '600',
-},
+  discountText: {
+    color: 'green',
+    fontWeight: '600',
+  },
 
-finalTotal: {
-  fontSize: 22,
-  fontWeight: '700',
-},
+  finalTotal: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
 
-saveBox: {
-  backgroundColor: '#E7F8EC',
-  padding: 15,
-  borderRadius: 12,
-  marginTop: 20,
-},
+  saveBox: {
+    backgroundColor: '#E7F8EC',
+    padding: 12,
+    borderRadius: 12,
+    marginTop: 15,
+  },
 
-saveText: {
-  color: 'green',
-  fontWeight: '700',
-  textAlign: 'center',
-},
+  saveText: {
+    color: 'green',
+    fontWeight: '700',
+    textAlign: 'center',
+  },
 });
