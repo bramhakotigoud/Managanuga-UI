@@ -126,7 +126,7 @@ const LoginScreen = () => {
         return;
       }
 
-      Alert.alert("OTP Sent", response.message);
+  
 
       setOtpSent(true);
       setLoginMode("otp");

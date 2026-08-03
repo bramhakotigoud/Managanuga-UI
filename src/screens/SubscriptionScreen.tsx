@@ -10,10 +10,13 @@ import {
   Image,
 } from 'react-native';
 
+import {useAuth} from "../context/AuthContext";
+import SubscriptionHeader from '../components/SubscriptionHeader';
 import MembershipCarousel from '../components/MembershipCarousel';
 import PlanDetailsCard from '../components/PlanDetailsCard';
 import BenefitsSection from '../components/BenefitsSection';
 import SubscribeButton from '../components/SubscribeButton';
+import ActiveMembershipScreen from "../components/ActiveMembershipScreen";
 
 import {getSubscriptionPlans} from '../services/subscriptionService';
 import {useCart} from '../context/CartContext';
@@ -41,7 +44,9 @@ export default function SubscriptionScreen({navigation}: any) {
       const response = await getSubscriptionPlans();
       console.log('Subscription Plans:', response);
 
-      setPlans(response);
+    // Load subscription plans
+    const plansResponse =
+      await getSubscriptionPlans();
 
       if (response && response.length > 0) {
         setSelectedPlan(response[0]);
@@ -51,7 +56,36 @@ export default function SubscriptionScreen({navigation}: any) {
     } finally {
       setLoading(false);
     }
-  };
+
+    // Load current user's membership
+    if (user?.id) {
+
+      const membershipResponse =
+        await getMyMembership(user.id);
+
+      console.log(
+        "Current Membership:",
+        membershipResponse
+      );
+
+      setMembership(
+        membershipResponse
+      );
+    }
+
+  } catch (e) {
+
+    console.log(
+      "Subscription Screen Error:",
+      e
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   const subscribeNow = () => {
     if (!selectedPlan) return;
@@ -76,9 +110,29 @@ export default function SubscriptionScreen({navigation}: any) {
       </SafeAreaView>
     );
   }
+  if (membership) {
+  return (
+    <ActiveMembershipScreen
+      membership={membership}
+      plans={plans}
+      navigation={navigation}
+    />
+  );
+}
 
   return (
     <SafeAreaView style={styles.container}>
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 110,
+        }}>
+
+        <SubscriptionHeader
+          navigation={navigation}
+        />
+
       {/* Fixed Top Header */}
       <View style={styles.header}>
         {/* Back Button */}
@@ -130,6 +184,22 @@ export default function SubscriptionScreen({navigation}: any) {
           selectedPlan={selectedPlan}
           setSelectedPlan={setSelectedPlan}
         />
+
+        
+
+        <PlanDetailsCard
+          selectedPlan={selectedPlan}
+        />
+
+        <BenefitsSection />
+
+      </ScrollView>
+
+       <SubscribeButton
+          selectedPlan={selectedPlan}
+          onPress={subscribeNow}
+        />
+
 
         <PlanDetailsCard selectedPlan={selectedPlan} />
 
