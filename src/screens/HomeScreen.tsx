@@ -142,6 +142,7 @@ const HomeScreen = () => {
           </Text>
           <Text style={styles.addressArrow}>⌄</Text>
         </TouchableOpacity> */}
+        {/* BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP) */}
 
         {/* Search */}
         <View style={styles.searchContainer}>
@@ -189,7 +190,7 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </ScrollView>
 
-        {/* BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP) */}
+        BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP)
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
