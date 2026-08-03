@@ -55,21 +55,26 @@ export default SubscribeButton;
 const styles = StyleSheet.create({
 
   button:{
-    marginHorizontal:18,
-    marginVertical:25,
-    height:65,
-    borderRadius:18,
+    position: "absolute",
 
-    backgroundColor:"#C8942E",
+    left: 18,
+    right: 18,
+    bottom: 18,
 
-    justifyContent:"center",
-    alignItems:"center",
+    height: 65,
 
-    elevation:8,
+    borderRadius: 18,
 
-    shadowColor:"#C8942E",
-    shadowOpacity:0.35,
-    shadowRadius:12,
+    backgroundColor: "#C8942E",
+
+    justifyContent: "center",
+    alignItems: "center",
+
+    elevation: 12,
+
+    shadowColor: "#C8942E",
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
     shadowOffset:{
       width:0,
       height:5,

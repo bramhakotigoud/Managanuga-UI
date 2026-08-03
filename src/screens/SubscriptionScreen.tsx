@@ -6,18 +6,25 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
+import {useAuth} from "../context/AuthContext";
 import SubscriptionHeader from '../components/SubscriptionHeader';
 import MembershipCarousel from '../components/MembershipCarousel';
 import PlanDetailsCard from '../components/PlanDetailsCard';
 import BenefitsSection from '../components/BenefitsSection';
 import SubscribeButton from '../components/SubscribeButton';
+import ActiveMembershipScreen from "../components/ActiveMembershipScreen";
 
-import {getSubscriptionPlans} from '../services/subscriptionService';
+import {
+  getSubscriptionPlans,
+  getMyMembership,
+} from '../services/subscriptionService';
 
 export default function SubscriptionScreen({navigation}: any) {
-
+  const {user} = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [membership, setMembership] =
+useState<any>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -26,21 +33,52 @@ export default function SubscriptionScreen({navigation}: any) {
   }, []);
 
   const loadPlans = async () => {
-    try {
-      const response = await getSubscriptionPlans();
-      console.log("Subscription Plans:", response);
+  try {
 
-      setPlans(response);
+    // Load subscription plans
+    const plansResponse =
+      await getSubscriptionPlans();
 
-      if (response.length > 0) {
-        setSelectedPlan(response[0]);
-      }
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
+    console.log(
+      "Subscription Plans:",
+      plansResponse
+    );
+
+    setPlans(plansResponse);
+
+    if (plansResponse.length > 0) {
+      setSelectedPlan(plansResponse[0]);
     }
-  };
+
+    // Load current user's membership
+    if (user?.id) {
+
+      const membershipResponse =
+        await getMyMembership(user.id);
+
+      console.log(
+        "Current Membership:",
+        membershipResponse
+      );
+
+      setMembership(
+        membershipResponse
+      );
+    }
+
+  } catch (e) {
+
+    console.log(
+      "Subscription Screen Error:",
+      e
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+};
 
   const subscribeNow = () => {
     navigation.navigate('Payment', {
@@ -66,12 +104,24 @@ export default function SubscriptionScreen({navigation}: any) {
       </SafeAreaView>
     );
   }
+  if (membership) {
+  return (
+    <ActiveMembershipScreen
+      membership={membership}
+      plans={plans}
+      navigation={navigation}
+    />
+  );
+}
 
   return (
     <SafeAreaView style={styles.container}>
 
       <ScrollView
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingBottom: 110,
+        }}>
 
         <SubscriptionHeader
           navigation={navigation}
@@ -83,18 +133,21 @@ export default function SubscriptionScreen({navigation}: any) {
           setSelectedPlan={setSelectedPlan}
         />
 
+        
+
         <PlanDetailsCard
           selectedPlan={selectedPlan}
         />
 
         <BenefitsSection />
 
-        <SubscribeButton
+      </ScrollView>
+
+       <SubscribeButton
           selectedPlan={selectedPlan}
           onPress={subscribeNow}
         />
 
-      </ScrollView>
 
     </SafeAreaView>
   );
