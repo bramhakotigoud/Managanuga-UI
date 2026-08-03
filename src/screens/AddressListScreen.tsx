@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
   View,
@@ -8,268 +8,404 @@ import {
   StyleSheet,
   ScrollView,
   SafeAreaView,
+  Image,
+  Alert,
 } from 'react-native';
 
-export default function AddressListScreen(){
+export default function AddressListScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
 
-const [addresses, setAddresses] = useState<any[]>([]);
-const fromCheckout = route.params?.fromCheckout;
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const fromCheckout = route.params?.fromCheckout;
 
-const saveAddresses = async (data: any[]) => {
-  try {
-    await AsyncStorage.setItem(
-      'addresses',
-      JSON.stringify(data)
-    );
-  } catch (error) {
-    console.log(error);
-  }
-};
-const loadAddresses = async () => {
-  const data = await AsyncStorage.getItem('addresses');
+  // Data loading helper
+  const loadAddresses = useCallback(async () => {
+    try {
+      const data = await AsyncStorage.getItem('addresses');
+      if (data) {
+        setAddresses(JSON.parse(data));
+      }
+    } catch (error) {
+      console.log('Error loading addresses:', error);
+    }
+  }, []);
 
-  if (data) {
-    setAddresses(JSON.parse(data));
-  }
-};
+  const saveAddresses = async (data: any[]) => {
+    try {
+      await AsyncStorage.setItem('addresses', JSON.stringify(data));
+    } catch (error) {
+      console.log('Error saving addresses:', error);
+    }
+  };
 
-useEffect(() => {
-  loadAddresses();
-}, []);
-const makeDefault = async (selectedIndex: number) => {
-  const updatedAddresses = addresses.map((item, index) => ({
-    ...item,
-    isDefault: index === selectedIndex,
-  }));
+  // Safe focus listener
+  useEffect(() => {
+    loadAddresses();
 
-  setAddresses(updatedAddresses);
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadAddresses();
+    });
 
-  await AsyncStorage.setItem(
-    'addresses',
-    JSON.stringify(updatedAddresses)
-  );
+    return unsubscribe;
+  }, [navigation, loadAddresses]);
 
-  if (fromCheckout) {
-    navigation.goBack();
-  }
-};
-const deleteAddress = (indexToDelete: number) => {
-  const updated = addresses.filter(
-    (_, index) => index !== indexToDelete
-  );
+  // Handle address saved/edited via route params if passed back
+  useEffect(() => {
+    const data = route.params?.newAddress;
+    const editIndex = route.params?.editIndex;
 
-  setAddresses(updated);
-  saveAddresses(updated);
-};
-useEffect(() => {
-  const data = (route.params as any)?.newAddress;
-  const editIndex = (route.params as any)?.editIndex;
+    if (!data) return;
 
-  if (!data) return;
+    const constructed = [
+      data.houseNo,
+      data.street,
+      data.landmark,
+      data.city,
+      data.state,
+    ]
+      .filter(Boolean)
+      .join(', ');
 
-  if (editIndex !== undefined) {
-  setAddresses((prev: any[]) => {
-    const updated = prev.map((item, index) =>
-      index === editIndex
-        ? {
+    const formattedAddress =
+      data.address ||
+      (constructed
+        ? `${constructed}${data.pincode ? ' - ' + data.pincode : ''}`
+        : '');
+
+    setAddresses((prev) => {
+      let updated: any[];
+
+      if (editIndex !== undefined && editIndex !== null) {
+        updated = prev.map((item, index) =>
+          index === editIndex
+            ? { ...data, address: formattedAddress }
+            : item
+        );
+      } else {
+        updated = [
+          ...prev,
+          {
             ...data,
-            address: `${data.houseNo}, ${data.street}, ${data.landmark}, ${data.city}, ${data.state} - ${data.pincode}`,
-          }
-        : item
+            isDefault: prev.length === 0,
+            address: formattedAddress,
+          },
+        ];
+      }
+
+      saveAddresses(updated);
+      return updated;
+    });
+
+    navigation.setParams({ newAddress: undefined, editIndex: undefined });
+  }, [route.params?.newAddress, route.params?.editIndex]);
+
+  const makeDefault = async (selectedIndex: number) => {
+    const updatedAddresses = addresses.map((item, index) => ({
+      ...item,
+      isDefault: index === selectedIndex,
+    }));
+
+    setAddresses(updatedAddresses);
+    await saveAddresses(updatedAddresses);
+
+    if (fromCheckout) {
+      navigation.goBack();
+    }
+  };
+
+  const deleteAddress = (indexToDelete: number) => {
+    Alert.alert(
+      'Delete Address',
+      'Are you sure you want to delete this address?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const updated = addresses.filter((_, index) => index !== indexToDelete);
+
+            if (addresses[indexToDelete]?.isDefault && updated.length > 0) {
+              updated[0].isDefault = true;
+            }
+
+            setAddresses(updated);
+            await saveAddresses(updated);
+          },
+        },
+      ]
     );
+  };
 
-    saveAddresses(updated);
-    return updated;
-  });
-} else {
-  setAddresses((prev: any[]) => {
-    const updated = [
-      ...prev,
-      {
-        ...data,
-        isDefault: prev.length === 0,
-        address: `${data.houseNo}, ${data.street}, ${data.landmark}, ${data.city}, ${data.state} - ${data.pincode}`,
-      },
-    ];
-
-    saveAddresses(updated);
-    return updated;
-  });
-}
-}, [route.params]);
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <Text style={styles.title}>My Addresses</Text>
+      {/* FIXED BRAND HEADER MATCHING AddAddressScreen */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <Text style={styles.backIcon}>‹</Text>
+        </TouchableOpacity>
 
-      {addresses.map((item, index) => (
-  <View key={index} style={styles.card}>
+        <View style={styles.brandContainer}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
+          <View style={styles.brandTextContainer}>
+            <Text style={styles.brandTitle}>Mana Ganuga</Text>
+            <Text style={styles.brandSubtitle}>Pure Tradition • Healthy Future</Text>
+          </View>
+        </View>
 
-    <View style={styles.row}>
-      <Text style={styles.name}>
-        {item.addressType === 'Home'
-          ? '🏠 Home'
-          : item.addressType === 'Office'
-          ? '🏢 Office'
-          : '📍 Other'}
+        <View style={styles.headerRightPlaceholder} />
+      </View>
+
+      {/* CENTERED PAGE TITLE */}
+      <Text style={[styles.titleCenter, addresses.length === 0 && styles.titleCenterEmpty]}>
+        My Addresses
       </Text>
-      {item.isDefault && (
-      <Text style={styles.defaultTag}>
-        ✓ Default
-      </Text>
-      )}
-    </View>
 
-    <Text style={styles.name}>
-      {item.name}
-    </Text>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {addresses.map((item, index) => (
+          <View key={index} style={styles.card}>
+            <View style={styles.topRow}>
+              <Text style={styles.homeTag}>
+                {item.addressType === 'Home' || item.type === 'Home'
+                  ? '🏠 Home'
+                  : item.addressType === 'Office' || item.type === 'Office'
+                  ? '🏢 Office'
+                  : '📍 Other'}
+              </Text>
+              {item.isDefault && (
+                <Text style={styles.defaultTag}>✓ Default</Text>
+              )}
+            </View>
 
-    <Text style={styles.address}>
-      {item.address}
-    </Text>
+            {!!item.name && <Text style={styles.name}>{item.name}</Text>}
+            {!!item.address && <Text style={styles.address}>{item.address}</Text>}
+            {!!item.mobile && <Text style={styles.mobile}>{item.mobile}</Text>}
 
-    <Text style={styles.mobile}>
-      {item.mobile}
-    </Text>
+            <View style={styles.cardActionsRow}>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('AddAddress', {
+                    editData: item,
+                    editIndex: index,
+                  })
+                }
+              >
+                <Text style={styles.edit}>Edit</Text>
+              </TouchableOpacity>
 
-    <View style={styles.row}>
-      <TouchableOpacity
-        onPress={() => 
-          navigation.navigate(
-            'AddAddress',{
-              editData:item,
-              editIndex:index,
+              <TouchableOpacity onPress={() => deleteAddress(index)}>
+                <Text style={styles.delete}>Delete</Text>
+              </TouchableOpacity>
+
+              {!item.isDefault && (
+                <TouchableOpacity onPress={() => makeDefault(index)}>
+                  <Text style={styles.defaultText}>Make Default</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        ))}
+
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() =>
+            navigation.navigate('AddAddress', {
+              editData: null,
+              editIndex: undefined,
             })
           }
         >
-        <Text style={styles.edit}>Edit</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => deleteAddress(index)}
-        >
-        <Text style={styles.delete}>Delete</Text>
-      </TouchableOpacity>
-      {!item.isDefault && (
-  <TouchableOpacity
-    onPress={() => makeDefault(index)}
-  >
-    <Text style={styles.defaultText}>
-      Make Default
-    </Text>
-  </TouchableOpacity>
-)}
-    </View>
-    
- </View>
-))}
-
-      <TouchableOpacity
-       style={styles.addButton}
-        onPress={() => navigation.navigate('AddAddress', {
-          editData: null,
-          editIndex: undefined,
-        })}
-        >
-        <Text style={styles.addText}>
-          + Add New Address
-        </Text>
-      </TouchableOpacity>
+          <Text style={styles.addText}>+ Add New Address</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container:{
-    flex:1,
-    backgroundColor:'#F8F4EC',
-    padding:20,
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F4EC',
   },
 
-  title:{
-    fontSize:26,
-    fontWeight:'700',
-    marginBottom:20,
+  /* Fixed Top Header Styles */
+  header: {
+    backgroundColor: '#F8F4EC',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
 
-  card:{
-    backgroundColor:'#FFF',
-    borderRadius:16,
-    padding:16,
-    marginBottom:15,
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
 
-  name:{
-    fontSize:18,
-    fontWeight:'700',
+  backIcon: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#2D341F',
+    marginTop: -2,
   },
 
-  address:{
-    color:'#666',
-    marginTop:8,
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 
-  mobile:{
-    marginTop:8,
-    fontWeight:'600',
+  logo: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain',
+    marginRight: 8,
   },
 
-  row:{
-    flexDirection:'row',
-    alignItems:'center',
-    flexWrap:'wrap',
-    marginTop:15,
+  brandTextContainer: {
+    justifyContent: 'center',
   },
 
-  edit:{
-    color:'#A84B21',
-    marginRight:20,
-    fontWeight:'700',
+  brandTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2D341F',
   },
 
-  delete:{
-    color:'red',
-    fontWeight:'700',
+  brandSubtitle: {
+    fontSize: 9,
+    color: '#8C8C8C',
+    fontWeight: '500',
   },
 
-  addButton:{
-    backgroundColor:'#A84B21',
-    padding:15,
-    borderRadius:12,
-    alignItems:'center',
-    marginTop:20,
+  headerRightPlaceholder: {
+    width: 36,
   },
 
-  addText:{
-    color:'#FFF',
-    fontWeight:'700',
+  titleCenter: {
+    fontSize: 20,
+    fontWeight: '700',
+    textAlign: 'center',
+    color: '#2D341F',
+    marginVertical: 15,
   },
-  topRow:{
-  flexDirection:'row',
-  justifyContent:'space-between',
-  marginBottom:10,
-},
 
-homeTag:{
-  backgroundColor:'#F5E6DD',
-  color:'#A84B21',
-  paddingHorizontal:10,
-  paddingVertical:4,
-  borderRadius:20,
-  fontWeight:'700',
-},
+  titleCenterEmpty: {
+    marginBottom: 5,
+  },
 
-defaultTag:{
-  color:'green',
-  fontWeight:'700',
-},
-defaultText: {
-  color: 'green',
-  marginLeft: 20,
-  fontWeight: '700',
-  fontSize:14,
-},
+  /* Content & Card Styles */
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+
+  card: {
+    backgroundColor: '#FFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 15,
+  },
+
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+
+  homeTag: {
+    backgroundColor: '#F5E6DD',
+    color: '#A84B21',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    fontWeight: '700',
+    fontSize: 12,
+  },
+
+  defaultTag: {
+    color: 'green',
+    fontWeight: '700',
+    fontSize: 13,
+  },
+
+  name: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#222',
+  },
+
+  address: {
+    color: '#666',
+    marginTop: 4,
+    lineHeight: 20,
+  },
+
+  mobile: {
+    marginTop: 4,
+    fontWeight: '600',
+    color: '#444',
+  },
+
+  cardActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 12,
+  },
+
+  edit: {
+    color: '#A84B21',
+    marginRight: 20,
+    fontWeight: '700',
+  },
+
+  delete: {
+    color: 'red',
+    fontWeight: '700',
+  },
+
+  defaultText: {
+    color: 'green',
+    marginLeft: 20,
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  addButton: {
+    backgroundColor: '#A84B21',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+
+  addText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });
