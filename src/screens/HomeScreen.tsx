@@ -1,4 +1,3 @@
-//import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -9,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   SafeAreaView,
+  Dimensions,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,14 +16,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 
-// 1. Separate sub-component declared OUTSIDE HomeScreen
-// const HeaderCartButton = () => {
+// Get screen width dynamically (Subtract 30 to account for container padding: 15 left + 15 right)
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const BANNER_WIDTH = SCREEN_WIDTH - 30;
+
+// Header Cart Button Sub-component
 export const HeaderCartButton = () => {
   const navigation = useNavigation();
   const { cartItems } = useCart();
 
   const cartCount = cartItems.reduce(
-    (total: number, item: any) => total + (item.quantity || 1),
+    (total: number, item: any) => total + (item.quantity || item.qty || 1),
     0
   );
 
@@ -43,7 +46,7 @@ export const HeaderCartButton = () => {
   );
 };
 
-// 2. Main HomeScreen component
+// Main HomeScreen component
 const HomeScreen = () => {
   const navigation = useNavigation();
   const [defaultAddress, setDefaultAddress] = useState<any>(null);
@@ -95,52 +98,56 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* FIXED TOP HEADER */}
+      <View style={styles.header}>
+        <View style={styles.brandSection}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
+          <View>
+            <Text style={styles.logoText}>Mana Ganuga</Text>
+            <Text style={styles.tagline}>
+              Pure Tradition • Healthy Future
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.headerIcons}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Subscription' as never)}>
+            <Text style={styles.icon}>🎖️</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Notifications' as never)}>
+            <Text style={styles.icon}>🔔</Text>
+          </TouchableOpacity>
+
+          {/* Cart Icon with Live Badge */}
+          <HeaderCartButton />
+        </View>
+      </View>
+
+      {/* SCROLLABLE CONTENT */}
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.brandSection}>
-            <Image
-              source={require('../assets/images/logo.png')}
-              style={styles.logo}
-            />
-            <View>
-              <Text style={styles.logoText}>Mana Ganuga</Text>
-              <Text style={styles.tagline}>
-                Pure Tradition • Healthy Future
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.headerIcons}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Subscription' as never)}>
-              <Text style={styles.icon}>🪪</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.icon}>🔔</Text>
-
-            {/* Render sub-component */}
-            <HeaderCartButton />
-          </View>
-        </View>
-
-        <TouchableOpacity style={styles.addressCard}>
+        {/* <TouchableOpacity style={styles.addressCard}>
           <Text style={styles.addressText} numberOfLines={1}>
             🏠 {defaultAddress
               ? `${defaultAddress.type} ${defaultAddress.name}, ${defaultAddress.city}, ${defaultAddress.state} ${defaultAddress.pincode}`
               : 'Select Address'}
           </Text>
           <Text style={styles.addressArrow}>⌄</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Search */}
         <View style={styles.searchContainer}>
           <Text style={styles.searchEmoji}>🔍</Text>
           <TextInput
-            placeholder="Search oils, ghee, jaggery..."
+            placeholder="Search oils"
             placeholderTextColor="#777"
             style={styles.searchInput}
           />
@@ -182,14 +189,16 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </ScrollView>
 
+        {/* BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP) */}
         <ScrollView
           horizontal
-          pagingEnabled
           showsHorizontalScrollIndicator={false}
+          snapToInterval={BANNER_WIDTH}
+          snapToAlignment="center"
+          decelerationRate="fast"
           onMomentumScrollEnd={(event) => {
             const index = Math.round(
-              event.nativeEvent.contentOffset.x /
-                event.nativeEvent.layoutMeasurement.width
+              event.nativeEvent.contentOffset.x / BANNER_WIDTH
             );
             setActiveBanner(index);
           }}>
@@ -335,52 +344,75 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F4EC',
-    padding: 15,
+    paddingHorizontal: 15,
   },
+  /* Fixed Top Header Styles */
+  // header: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-between',
+  //   alignItems: 'center',
+  //   paddingHorizontal: 15,
+  //   paddingVertical: 10,
+  //   backgroundColor: '#F8F4EC',
+  //   zIndex: 10,
+  //   elevation: 2,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 1 },
+  //   shadowOpacity: 0.05,
+  //   shadowRadius: 2,
+  // },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 5,
-    marginBottom: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    backgroundColor: '#F8F4EC',
+    zIndex: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   brandSection: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   logo: {
-    width: 50,
-    height: 50,
+    width: 40,
+    height: 40,
     resizeMode: 'contain',
-    marginRight: 10,
+    marginRight: 8,
   },
   logoText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#2D341F',
   },
   tagline: {
     color: '#777',
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 10,
+    marginTop: 1,
   },
   headerIcons: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   icon: {
-    fontSize: 22,
-    marginLeft: 15,
+    fontSize: 20,
+    marginLeft: 12,
   },
   cartIconContainer: {
     position: 'relative',
+    marginLeft: 12,
   },
   cartBadge: {
     position: 'absolute',
     top: -4,
     right: -8,
     backgroundColor: '#A84B21',
-    borderRadius: 10,
+    borderRadius: 9,
     minWidth: 18,
     height: 18,
     justifyContent: 'center',
@@ -392,29 +424,43 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
+  // searchContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   backgroundColor: '#FFF',
+  //   borderRadius: 15,
+  //   paddingHorizontal: 15,
+  //   height: 50,
+  //   marginBottom: 15,
+  // },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFF',
     borderRadius: 15,
     paddingHorizontal: 15,
-    height: 55,
-    marginBottom: 15,
+    height: 50,
+    marginTop: 13, // 👈 Spacing between header and search bar
+    marginBottom:11,//to adjust horizontal icons spacing with SB
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 14,
+    color: '#222',
   },
   searchEmoji: {
     fontSize: 18,
   },
+
+  /* Banner Dynamic Styling */
   heroBanner: {
-    width: 370,
-    height: 190,
+    width: BANNER_WIDTH,
+    height: 180,
     borderRadius: 20,
     marginBottom: 20,
-    marginRight: 0,
+    resizeMode: 'cover',
   },
+
   categoryContainer: {
     paddingBottom: 10,
   },
@@ -457,7 +503,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     borderRadius: 15,
     paddingHorizontal: 15,
-    height: 55,
+    height: 50,
+    marginTop: 10,
     marginBottom: 15,
     flexDirection: 'row',
     alignItems: 'center',
@@ -503,7 +550,7 @@ const styles = StyleSheet.create({
   dotContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 5,
     marginBottom: 15,
   },
   dot: {

@@ -69,40 +69,36 @@ const ProductsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      {/* FIXED TOP HEADER (OUTSIDE SCROLLVIEW) */}
+      <View style={styles.header}>
+        <View style={styles.logoSection}>
+          <Image
+            source={require('../assets/images/logo.png')}
+            style={styles.logo}
+          />
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.logoSection}>
-            <Image
-              source={require('../assets/images/logo.png')}
-              style={styles.logo}
-            />
+          <View>
+            <Text style={styles.brandName}>
+              Mana Ganuga
+            </Text>
 
-            <View>
-              <Text style={styles.brandName}>
-                Mana Ganuga
-              </Text>
-
-              <Text style={styles.tagline}>
-                Pure Tradition • Healthy Future
-              </Text>
-            </View>
+            <Text style={styles.tagline}>
+              Pure Tradition • Healthy Future
+            </Text>
           </View>
-
-          <View style={styles.headerIcons}>
-            <Text style={styles.icon}>🔔</Text>
-            {/* <TouchableOpacity
-              onPress={() => navigation.navigate('Cart')}>
-              <Text style={styles.icon}>🛒</Text>
-            </TouchableOpacity> */}
-            <HeaderCartButton />
-          </View>
-            
-
-          
-
         </View>
+
+        <View style={styles.headerIcons}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Notifications')}>
+            <Text style={styles.icon}>🔔</Text>
+          </TouchableOpacity>
+          <HeaderCartButton />
+        </View>
+      </View>
+
+      {/* SCROLLABLE CONTENT */}
+      <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Search */}
         <View style={styles.searchContainer}>
@@ -217,12 +213,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F4EC',
   },
 
+  /* Fixed Top Header Styles */
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    paddingTop: 10,
+    paddingVertical: 10,
+    backgroundColor: '#F8F4EC',
+    zIndex: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
 
   logoSection: {
@@ -231,29 +235,31 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 45,
-    height: 45,
+    width: 40,
+    height: 40,
     resizeMode: 'contain',
-    marginRight: 10,
+    marginRight: 8,
   },
 
   brandName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: '#2D341F',
   },
 
   tagline: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#777',
+    marginTop: 1,
   },
 
   headerIcons: {
     flexDirection: 'row',
+    alignItems: 'center',
   },
 
   icon: {
-    fontSize: 22,
+    fontSize: 20,
     marginLeft: 12,
   },
 
