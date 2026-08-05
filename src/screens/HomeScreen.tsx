@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  Share,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -51,6 +53,33 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const [defaultAddress, setDefaultAddress] = useState<any>(null);
   const [activeBanner, setActiveBanner] = useState(0);
+  // Animation state for continuous pulsing effect
+  // Animation value tracking translation on X-axis
+  const slideAnim = React.useRef(new Animated.Value(150)).current; // Starts 150px off-screen to the right
+
+  useEffect(() => {
+    // Loop: Slide in from right -> Pause -> Slide out to right -> Pause 2s
+    const slideAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(slideAnim, {
+          toValue: 0, // Slide onto the screen
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.delay(2000), // Stay visible for 2 seconds
+        Animated.timing(slideAnim, {
+          toValue: 150, // Slide back off-screen
+          duration: 400,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1000), // Wait 1 second before coming back
+      ])
+    );
+
+    slideAnimation.start();
+
+    return () => slideAnimation.stop();
+  }, [slideAnim]);
 
   const featuredProducts = [
     {
@@ -82,6 +111,16 @@ const HomeScreen = () => {
       image: require('../assets/images/sesame.png'),
     },
   ];
+  const handleShareReferral = async () => {
+    try {
+      await Share.share({
+        message:
+          'Try 100% pure wood-pressed oils from Mana Ganuga! Download the app here: https://managanuga.com/download?ref=USER123',
+      });
+    } catch (error: any) {
+      console.error(error.message);
+    }
+  };
 
   useEffect(() => {
     loadAddress();
@@ -134,15 +173,7 @@ const HomeScreen = () => {
         style={styles.container}
         showsVerticalScrollIndicator={false}>
 
-        {/* <TouchableOpacity style={styles.addressCard}>
-          <Text style={styles.addressText} numberOfLines={1}>
-            🏠 {defaultAddress
-              ? `${defaultAddress.type} ${defaultAddress.name}, ${defaultAddress.city}, ${defaultAddress.state} ${defaultAddress.pincode}`
-              : 'Select Address'}
-          </Text>
-          <Text style={styles.addressArrow}>⌄</Text>
-        </TouchableOpacity> */}
-        {/* BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP) */}
+        
 
         {/* Search */}
         <View style={styles.searchContainer}>
@@ -233,48 +264,65 @@ const HomeScreen = () => {
           ))}
         </View>
 
+        
+        
         {/* Categories */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.categoryContainer}>
-          <View style={styles.category}>
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Sunflower' } as never)
+            }>
             <Image
               source={require('../assets/images/sunflower.png')}
               style={styles.categoryImage}
             />
             <Text style={styles.categoryText}>Sunflower</Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.category}>
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Groundnut' } as never)
+            }>
             <Image
               source={require('../assets/images/groundnut.png')}
               style={styles.categoryImage}
             />
             <Text style={styles.categoryText}>Groundnut</Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.category}>
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Coconut' } as never)
+            }>
             <Image
               source={require('../assets/images/coconut.png')}
               style={styles.categoryImage}
             />
             <Text style={styles.categoryText}>Coconut</Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.category}>
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Sesame' } as never)
+            }>
             <Image
               source={require('../assets/images/sesame.png')}
               style={styles.categoryImage}
             />
             <Text style={styles.categoryText}>Sesame</Text>
-          </View>
+          </TouchableOpacity>
         </ScrollView>
-
         {/* Best Sellers */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Best Sellers</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Products' as never)}>
             <Text style={styles.viewAll}>View All</Text>
           </TouchableOpacity>
         </View>
@@ -331,9 +379,27 @@ const HomeScreen = () => {
 
         <View style={{ height: 40 }} />
       </ScrollView>
+      
+
+    
+      {/* Floating Slide-in Referral Button */}
+      <Animated.View
+        style={[
+          styles.floatingShareBtn,
+          { transform: [{ translateX: slideAnim }] },
+        ]}>
+        <TouchableOpacity
+          style={styles.floatingInner}
+          onPress={handleShareReferral}
+          activeOpacity={0.8}>
+          <Text style={styles.floatingShareIcon}>🎁</Text>
+          <Text style={styles.floatingShareText}>Refer</Text>
+        </TouchableOpacity>
+      </Animated.View>
     </SafeAreaView>
   );
 };
+   
 
 export default HomeScreen;
 
@@ -347,21 +413,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F4EC',
     paddingHorizontal: 15,
   },
-  /* Fixed Top Header Styles */
-  // header: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-between',
-  //   alignItems: 'center',
-  //   paddingHorizontal: 15,
-  //   paddingVertical: 10,
-  //   backgroundColor: '#F8F4EC',
-  //   zIndex: 10,
-  //   elevation: 2,
-  //   shadowColor: '#000',
-  //   shadowOffset: { width: 0, height: 1 },
-  //   shadowOpacity: 0.05,
-  //   shadowRadius: 2,
-  // },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -425,15 +476,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
-  // searchContainer: {
-  //   flexDirection: 'row',
-  //   alignItems: 'center',
-  //   backgroundColor: '#FFF',
-  //   borderRadius: 15,
-  //   paddingHorizontal: 15,
-  //   height: 50,
-  //   marginBottom: 15,
-  // },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -441,8 +483,8 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingHorizontal: 15,
     height: 50,
-    marginTop: 13, // 👈 Spacing between header and search bar
-    marginBottom:11,//to adjust horizontal icons spacing with SB
+    marginTop: 13,
+    marginBottom: 11,
   },
   searchInput: {
     flex: 1,
@@ -452,8 +494,6 @@ const styles = StyleSheet.create({
   searchEmoji: {
     fontSize: 18,
   },
-
-  /* Banner Dynamic Styling */
   heroBanner: {
     width: BANNER_WIDTH,
     height: 180,
@@ -461,7 +501,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     resizeMode: 'cover',
   },
-
   categoryContainer: {
     paddingBottom: 10,
   },
@@ -597,5 +636,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     lineHeight: 18,
+  },
+  floatingShareBtn: {
+    position: 'absolute',
+    bottom: 25,
+    right: 15,
+    zIndex: 999,
+  },
+  floatingInner: {
+    backgroundColor: '#A84B21',
+    borderRadius: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  floatingShareIcon: {
+    fontSize: 20,
+    marginRight: 6,
+  },
+  floatingShareText: {
+    color: '#FFF',
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

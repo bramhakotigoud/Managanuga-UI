@@ -6,11 +6,23 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  Share,
 } from 'react-native';
 
 export default function ProfileScreen({navigation}: any) {
 const {isLoggedIn, user, logout} = useAuth();
   console.log('isLoggedIn =', isLoggedIn);
+  // 🎁 Share Referral Handler
+  const handleShareReferral = async () => {
+    try {
+      await Share.share({
+        message:
+          'Try 100% pure wood-pressed oils from Mana Ganuga! Download the app here: https://managanuga.com/download?ref=USER123',
+      });
+    } catch (error: any) {
+      console.error(error.message);
+    }
+  };
   if (!isLoggedIn) {
   return (
     <SafeAreaView style={styles.container}>
@@ -111,6 +123,12 @@ const {isLoggedIn, user, logout} = useAuth();
       style={styles.menuItem}
       onPress={() => navigation.navigate('Notifications')}>
       <Text>🔔 Notifications</Text>
+    </TouchableOpacity>
+    {/* 🎁 REFER & EARN OPTION */}
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={handleShareReferral}>
+      <Text>🎁 Refer & Earn</Text>
     </TouchableOpacity>
     <TouchableOpacity style={styles.menuItem}
       style={styles.menuItem}
