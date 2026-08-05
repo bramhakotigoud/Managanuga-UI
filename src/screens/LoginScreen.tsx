@@ -21,6 +21,7 @@ import {
 const LoginScreen = () => {
   const {login} = useAuth();
     const [mobile, setMobile] = useState('');
+    
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
     const [loginMode, setLoginMode] = useState("mobile");
@@ -28,10 +29,25 @@ const LoginScreen = () => {
     const [otpError, setOtpError] = useState("");
     const navigation = useNavigation();
     const route = useRoute<any>();
+    const [vendorId, setVendorId] = useState<string | null>(null);
     useEffect(() => {
+
   navigation.getParent()?.setOptions({
-    tabBarStyle: { display: 'none' },
+    tabBarStyle: { display: "none" },
   });
+
+  if (route.params?.vendor) {
+
+  console.log(
+    "Referral Vendor:",
+    route.params.vendor
+  );
+
+  setVendorId(route.params.vendor);
+
+}
+
+  
 
   return () => {
     navigation.getParent()?.setOptions({
@@ -42,6 +58,7 @@ const LoginScreen = () => {
       },
     });
   };
+
 }, []);
     
 
@@ -137,7 +154,7 @@ const LoginScreen = () => {
     // STEP 2 - Verify OTP
     if (loginMode === "otp") { 
 
-      const response = await verifyOtp(mobile, otp);
+      const response = await verifyOtp(mobile, otp,   vendorId);
 
 // Invalid OTP
 if (!response.token) {
@@ -151,10 +168,34 @@ setOtpError("");
 // Login successful
 login(response.token, response.user);
 
+// Vendor Login
+if (response.user.role === "VENDOR") {
+
+  navigation.reset({
+    index: 0,
+    routes: [
+      {
+        name: "VendorDashboard" as never,
+      },
+    ],
+  });
+
+  return;
+}
+
+// Customer Login
 if (route.params?.fromCart) {
+
   navigation.navigate("Cart" as never);
+
+} else if (route.params?.fromSubscription) {
+
+  navigation.navigate("Subscription" as never);
+
 } else {
-  navigation.navigate("Home" as never);
+
+  navigation.navigate("MainTabs" as never);
+
 }
 
 return;
@@ -179,13 +220,37 @@ if (loginMode === "password") {
   }
 
   // Login successful
-  login(response.token, response.user);
+ login(response.token, response.user);
 
-  if (route.params?.fromCart) {
-    navigation.navigate("Cart" as never);
-  } else {
-    navigation.navigate("Home" as never);
-  }
+// Vendor Login
+if (response.user.role === "VENDOR") {
+
+  navigation.reset({
+    index: 0,
+    routes: [
+      {
+        name: "VendorDashboard" as never,
+      },
+    ],
+  });
+
+  return;
+}
+
+// Customer Login
+if (route.params?.fromCart) {
+
+  navigation.navigate("Cart" as never);
+
+} else if (route.params?.fromSubscription) {
+
+  navigation.navigate("Subscription" as never);
+
+} else {
+
+  navigation.navigate("MainTabs" as never);
+
+}
 }
 
   } catch (err: any) {

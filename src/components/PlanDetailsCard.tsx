@@ -30,7 +30,7 @@ const PlanDetailsCard: React.FC<Props> = ({selectedPlan}) => {
     },
     {
       label: 'Eligible Bottles',
-      value: `${selectedPlan.eligible_bottles}`,
+      value: `${selectedPlan.monthly_limit_litres} Litres`,
     },
     {
       label: 'Validity',
