@@ -19,6 +19,7 @@ export const sendOtp = async (mobile: string) => {
 export const verifyOtp = async (
   mobile: string,
   otp: string,
+   vendorId?: string | null,
 ) => {
   const response = await fetch(`${BASE_URL}/auth/verify-otp`, {
     method: "POST",
@@ -28,6 +29,7 @@ export const verifyOtp = async (
     body: JSON.stringify({
       mobile,
       otp,
+      vendorId,
     }),
   });
   return await response.json();

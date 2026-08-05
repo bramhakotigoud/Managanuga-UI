@@ -17,7 +17,7 @@ interface Plan {
   wallet_bonus: number;
   monthly_claim: number;
   discount_percentage: number;
-  eligible_bottles: number;
+  monthly_limit_litres: number;
 }
 
 interface Props {

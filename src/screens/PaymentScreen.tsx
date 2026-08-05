@@ -1,7 +1,8 @@
 import { createOrder } from "../services/paymentServices";
 import RazorpayCheckout from "react-native-razorpay";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from "../context/AuthContext";
+import { getCheckoutSummary } from "../services/paymentServices";
 import { createOrder as createAppOrder } from "../services/orderService";
 import {
   SafeAreaView,
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Image,
 } from 'react-native';
 import { useCart } from '../context/CartContext';
 import Config from "react-native-config";
@@ -38,7 +40,7 @@ const productAmount = buyNow
 
 const totalAmount = isMembership
   ? 1
-  : 1
+  : productAmount;
 
  console.log("buyNow =", buyNow);
  console.log("product =", product);
@@ -48,6 +50,46 @@ const totalAmount = isMembership
 
   const [selectedPayment, setSelectedPayment] =
     useState('UPI');
+    const [benefits, setBenefits] =
+  useState<any>(null);
+
+const [payableAmount, setPayableAmount] =
+  useState(totalAmount);
+  const loadMembershipBenefits = async () => {
+
+  if (isMembership) return;
+
+  try {
+
+    const response =
+      await getCheckoutSummary(user.id);
+
+    setBenefits(
+      response.membershipBenefits
+    );
+
+    if (isMembership) {
+  setPayableAmount(1);
+} else {
+  setPayableAmount(
+    response.membershipBenefits.payableAmount
+  );
+}
+
+  } catch (e) {
+
+    console.log("Checkout Summary Error:", e);
+
+  }
+
+};
+useEffect(() => {
+
+  if (user?.id) {
+    loadMembershipBenefits();
+  }
+
+}, [user]);
 
   const placeOrder = async () => {
   console.log("Pay Button Clicked");
@@ -72,10 +114,12 @@ const totalAmount = isMembership
     
     const response = await createOrder(
       "ORDER_" + Date.now(),
-      totalAmount,
+      payableAmount,
       isMembership ? "membership" : "order",
+      user.id,
       membershipPlan?.id || null,
     );
+   
     
     console.log("RESPONSE =", response);
 
@@ -139,11 +183,26 @@ if (!verifyResponse.ok) {
 
 const verifyData = JSON.parse(text);
 
+
 if (verifyData.success) {
- 
-  navigation.navigate("OrderSuccess");
+
+  if (isMembership) {
+
+    navigation.replace("Subscription");
+
+  } else {
+
+    navigation.navigate("OrderSuccess");
+
+  }
+
 } else {
-  Alert.alert("Failed", verifyData.message || "Verification Failed");
+
+  Alert.alert(
+    "Failed",
+    verifyData.message || "Verification Failed"
+  );
+
 }
 
  } catch (err: any) {
@@ -176,6 +235,27 @@ const handleMembershipPayment = async () => {
   return (
     <SafeAreaView style={styles.container}>
 
+      <View style={styles.header}>
+                    <TouchableOpacity
+                      style={styles.backButton}
+                      onPress={() => navigation.goBack()}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <Text style={styles.backIcon}>‹</Text>
+                    </TouchableOpacity>
+            
+                    <View style={styles.brandContainer}>
+                      <Image
+                        source={require('../assets/images/logo.png')}
+                        style={styles.logo}
+                      />
+                      <View style={styles.brandTextContainer}>
+                        <Text style={styles.brandTitle}>Mana Ganuga</Text>
+                        <Text style={styles.brandSubtitle}>Pure Tradition • Healthy Future</Text>
+                      </View>
+                    </View>
+            
+                    <View style={styles.headerRightPlaceholder} />
+                  </View>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -218,15 +298,144 @@ const handleMembershipPayment = async () => {
             </Text>
           </View>
         )}
-        {!isMembership && (
-          <View style={styles.offerCard}>
-            
-            <Text style={styles.offerText}>
-              Claim with payment offers
-            </Text>
-          </View>
-        )}
+        {!isMembership && benefits && (
 
+<View style={styles.offerCard}>
+
+<Text style={styles.offerTitle}>
+👑 Membership  Applied
+</Text>
+
+<View style={styles.priceRow}>
+  <Text>Current Plan</Text>
+  <Text style={{fontWeight:"700"}}>
+
+  {benefits.membership.plan_name ||
+   (benefits.membership.plan_id === 1
+      ? "Basic"
+      : benefits.membership.plan_id === 2
+      ? "Silver"
+      : benefits.membership.plan_id === 3
+      ? "Gold"
+      : benefits.membership.plan_id === 4
+      ? "Platinum"
+      : "Membership")}
+
+</Text>
+</View>
+
+<View style={styles.priceRow}>
+  <Text>Usage</Text>
+  <Text style={{fontWeight:"700"}}>
+    {benefits.usedLitres} / {benefits.membership.monthly_limit_litres} Litres
+  </Text>
+</View>
+
+<View style={styles.priceRow}>
+  <Text>Remaining</Text>
+  <Text style={{fontWeight:"700", color:"#2E7D32"}}>
+    {benefits.remainingLitres} Litres
+  </Text>
+</View>
+
+</View>
+
+)}
+{!isMembership && benefits && (
+
+<View style={styles.offerCard}>
+
+  <Text style={styles.offerTitle}>
+    Discount Distribution
+  </Text>
+
+  <View style={styles.priceRow}>
+    <Text style={styles.offerText}>
+      Full Discount
+    </Text>
+
+    <Text
+      style={{
+        fontWeight: "700",
+        color: "#2E7D32",
+      }}
+    >
+      {benefits.fullDiscountLitres} Litres @{" "}
+      {benefits.membership.discount_percent}%
+    </Text>
+  </View>
+
+  {benefits.halfDiscountLitres > 0 && (
+
+    <View style={styles.priceRow}>
+
+      <Text style={styles.offerText}>
+        Half Discount
+      </Text>
+
+      <Text
+        style={{
+          fontWeight: "700",
+          color: "#F59E0B",
+        }}
+      >
+        {benefits.halfDiscountLitres} Litres @{" "}
+        {benefits.membership.discount_percent / 2}%
+      </Text>
+
+    </View>
+
+  )}
+
+</View>
+
+)}
+{!isMembership && benefits && (
+
+<View style={styles.offerCard}>
+
+  <Text style={styles.offerTitle}>
+    Price Breakdown
+  </Text>
+
+  <View style={styles.priceRow}>
+    <Text>Items Total</Text>
+    <Text>₹{benefits.subtotal.toFixed(2)}</Text>
+  </View>
+
+  <View style={styles.priceRow}>
+    <Text>
+      Membership Discount ({benefits.membership.discount_percent}%)
+    </Text>
+    <Text style={styles.discountText}>
+      -₹{benefits.membershipDiscount.toFixed(2)}
+    </Text>
+  </View>
+
+  <View style={styles.priceRow}>
+    <Text>Wallet Claim</Text>
+    <Text style={styles.discountText}>
+      -₹{benefits.walletClaim.toFixed(2)}
+    </Text>
+  </View>
+
+  
+
+  <View style={styles.divider} />
+
+  <View style={styles.priceRow}>
+    <Text style={styles.totalText}>
+      Final Payable
+    </Text>
+
+    <Text style={styles.totalAmount}>
+      ₹{benefits.payableAmount.toFixed(2)}
+    </Text>
+  </View>
+
+</View>
+
+)}
         <Text style={styles.section}>
           {isMembership
           ? "Choose Payment Method"
@@ -292,6 +501,7 @@ const handleMembershipPayment = async () => {
 
       </ScrollView>
 
+
       <View style={styles.bottomBar}>
 
   {isMembership ? (
@@ -320,7 +530,7 @@ const handleMembershipPayment = async () => {
 
     <>
       <Text style={styles.bottomAmount}>
-        ₹{totalAmount}
+       ₹{payableAmount}
       </Text>
 
       <TouchableOpacity
@@ -328,7 +538,7 @@ const handleMembershipPayment = async () => {
         onPress={placeOrder}
       >
         <Text style={styles.payText}>
-          Pay ₹{totalAmount}
+          Continue to Pay
         </Text>
       </TouchableOpacity>
     </>
@@ -478,4 +688,87 @@ cancelText: {
   fontSize: 18,
   fontWeight: "700",
 },
+priceRow:{
+  flexDirection:"row",
+  justifyContent:"space-between",
+  marginVertical:8,
+},
+totalText: {
+  fontSize: 18,
+  fontWeight: "700",
+  color: "#1F3A24",
+},
+
+totalAmount: {
+  fontSize: 22,
+  fontWeight: "800",
+  color: "#2E7D32",
+},
+header: {
+    backgroundColor: '#F8F4EC',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    zIndex: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+
+  backButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+
+  backIcon: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#2D341F',
+    marginTop: -2,
+  },
+
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+   logo: {
+    width: 32,
+    height: 32,
+    resizeMode: 'contain',
+    marginRight: 8,
+  },
+
+  brandTextContainer: {
+    justifyContent: 'center',
+  },
+
+  brandTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2D341F',
+  },
+
+  brandSubtitle: {
+    fontSize: 9,
+    color: '#8C8C8C',
+    fontWeight: '500',
+  },
+   headerRightPlaceholder: {
+    width: 36,
+  },
+  
+
 });

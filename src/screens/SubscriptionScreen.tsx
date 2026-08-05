@@ -11,18 +11,25 @@ import {
 } from 'react-native';
 
 import {useAuth} from "../context/AuthContext";
-import SubscriptionHeader from '../components/SubscriptionHeader';
+
 import MembershipCarousel from '../components/MembershipCarousel';
 import PlanDetailsCard from '../components/PlanDetailsCard';
 import BenefitsSection from '../components/BenefitsSection';
 import SubscribeButton from '../components/SubscribeButton';
 import ActiveMembershipScreen from "../components/ActiveMembershipScreen";
 
-import {getSubscriptionPlans} from '../services/subscriptionService';
+import {
+  getSubscriptionPlans,
+  getMyMembership,
+} from '../services/subscriptionService';
 import {useCart} from '../context/CartContext';
 
 export default function SubscriptionScreen({navigation}: any) {
   const {cartItems} = useCart();
+  const {user} = useAuth();
+
+const [membership, setMembership] =
+  useState<any>(null);
 
   // Safely sum total items checking all common quantity key names
   const cartCount =
@@ -35,29 +42,60 @@ export default function SubscriptionScreen({navigation}: any) {
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadPlans();
-  }, []);
+ useEffect(() => {
 
-  const loadPlans = async () => {
-    try {
-      const response = await getSubscriptionPlans();
-      console.log('Subscription Plans:', response);
+  const unsubscribe = navigation.addListener(
+    "focus",
+    () => {
+      loadPlans();
+    }
+  );
 
-    // Load subscription plans
+  return unsubscribe;
+
+}, [navigation, user]);
+
+ const loadPlans = async () => {
+  try {
+
     const plansResponse =
       await getSubscriptionPlans();
 
-      if (response && response.length > 0) {
-        setSelectedPlan(response[0]);
-      }
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
-    }
+    console.log(
+      "Subscription Plans:",
+      plansResponse,
+    );
 
-    // Load current user's membership
+    setPlans(plansResponse);
+
+    if (plansResponse.length > 0) {
+
+  const currentMembership =
+    user?.id
+      ? await getMyMembership(user.id)
+      : null;
+
+  setMembership(currentMembership);
+
+  if (currentMembership) {
+
+    const nextPlan =
+      plansResponse.find(
+        p => p.id > currentMembership.plan_id
+      );
+
+    setSelectedPlan(
+      nextPlan || plansResponse[0]
+    );
+
+  } else {
+
+    setSelectedPlan(plansResponse[0]);
+
+  }
+
+}
+
     if (user?.id) {
 
       const membershipResponse =
@@ -65,11 +103,11 @@ export default function SubscriptionScreen({navigation}: any) {
 
       console.log(
         "Current Membership:",
-        membershipResponse
+        membershipResponse,
       );
 
       setMembership(
-        membershipResponse
+        membershipResponse,
       );
     }
 
@@ -77,7 +115,7 @@ export default function SubscriptionScreen({navigation}: any) {
 
     console.log(
       "Subscription Screen Error:",
-      e
+      e,
     );
 
   } finally {
@@ -88,20 +126,31 @@ export default function SubscriptionScreen({navigation}: any) {
 };
 
   const subscribeNow = () => {
-    if (!selectedPlan) return;
 
-    navigation.navigate('Payment', {
-      type: 'membership',
-      plan: {
-        id: selectedPlan.id,
-        name: selectedPlan.plan_name,
-        price: selectedPlan.plan_price,
-        discount: selectedPlan.discount,
-        walletAmount: selectedPlan.wallet_amount,
-        monthlyClaim: selectedPlan.monthly_claim,
-      },
+  if (!user) {
+
+    navigation.navigate("Login", {
+      fromSubscription: true,
     });
-  };
+
+    return;
+  }
+
+  if (!selectedPlan) return;
+
+  navigation.navigate("Payment", {
+    type: "membership",
+    plan: {
+      id: selectedPlan.id,
+      name: selectedPlan.plan_name,
+      price: selectedPlan.plan_price,
+      discount: selectedPlan.discount,
+      walletAmount: selectedPlan.wallet_amount,
+      monthlyClaim: selectedPlan.monthly_claim,
+    },
+  });
+
+};
 
   if (loading) {
     return (
@@ -129,9 +178,7 @@ export default function SubscriptionScreen({navigation}: any) {
           paddingBottom: 110,
         }}>
 
-        <SubscriptionHeader
-          navigation={navigation}
-        />
+       
 
       {/* Fixed Top Header */}
       <View style={styles.header}>
@@ -178,7 +225,7 @@ export default function SubscriptionScreen({navigation}: any) {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      
         <MembershipCarousel
           plans={plans}
           selectedPlan={selectedPlan}
@@ -194,19 +241,12 @@ export default function SubscriptionScreen({navigation}: any) {
         <BenefitsSection />
 
       </ScrollView>
-
+        
        <SubscribeButton
           selectedPlan={selectedPlan}
           onPress={subscribeNow}
         />
 
-
-        <PlanDetailsCard selectedPlan={selectedPlan} />
-
-        <BenefitsSection />
-
-        <SubscribeButton selectedPlan={selectedPlan} onPress={subscribeNow} />
-      </ScrollView>
     </SafeAreaView>
   );
 }

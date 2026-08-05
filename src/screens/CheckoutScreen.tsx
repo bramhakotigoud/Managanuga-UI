@@ -1,6 +1,8 @@
 import { useCart } from '../context/CartContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
+import { useAuth } from "../context/AuthContext";
+import { getCheckoutSummary } from "../services/paymentService";
 import {
   SafeAreaView,
   ScrollView,
@@ -16,9 +18,12 @@ export default function CheckoutScreen({
   route,
 }: any) {
   const { cartItems, getCartTotal } = useCart();
+  const { user } = useAuth();
   const buyNow = route?.params?.buyNow;
   const product = route?.params?.product;
   const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [benefits, setBenefits] =
+  useState<any>(null);
 
   // Calculate cart count safely for header
   const cartCount =
@@ -35,12 +40,12 @@ export default function CheckoutScreen({
   }, 0);
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadAddress();
-    });
+  loadAddress();
 
-    return unsubscribe;
-  }, [navigation]);
+  if (user?.id) {
+    loadMembershipBenefits();
+  }
+}, [user]);
 
   const loadAddress = async () => {
     const data = await AsyncStorage.getItem('addresses');
@@ -55,7 +60,29 @@ export default function CheckoutScreen({
       setSelectedAddress(defaultAddress);
     }
   };
+  const loadMembershipBenefits = async () => {
 
+  try {
+
+    console.log("USER:", user);
+    console.log("USER ID:", user?.id);
+
+    const response =
+      await getCheckoutSummary(user.id);
+
+    console.log("CHECKOUT RESPONSE:", response);
+
+    setBenefits(
+      response.membershipBenefits
+    );
+
+  } catch (e) {
+
+    console.log("CHECKOUT ERROR:", e);
+
+  }
+
+};
   return (
     <SafeAreaView style={styles.container}>
       {/* FIXED BRAND HEADER WITH BACK BUTTON, LOGO, BELL & CART BADGE */}
@@ -183,56 +210,145 @@ export default function CheckoutScreen({
         ))}
 
         {/* Price Details */}
-        <View style={styles.priceCard}>
-          <Text style={styles.priceHeading}>Price Details</Text>
+       {/* Price Details */}
+<View style={styles.priceCard}>
+  <Text style={styles.priceHeading}>Price Details</Text>
 
-          <View style={styles.priceRow}>
-            <Text>Total Items</Text>
-            <Text>{totalItemsCount} {totalItemsCount === 1 ? 'Item' : 'Items'}</Text>
-          </View>
+  <View style={styles.priceRow}>
+    <Text>Total Items</Text>
+    <Text>
+      {totalItemsCount}{" "}
+      {totalItemsCount === 1 ? "Item" : "Items"}
+    </Text>
+  </View>
 
-          <View style={styles.priceRow}>
-            <Text>Items Cost</Text>
-            <Text>₹{buyNow ? product.price : getCartTotal()}</Text>
-          </View>
+  <View style={styles.priceRow}>
+    <Text>Items Cost</Text>
+    <Text>
+      ₹{buyNow ? product.price : getCartTotal()}
+    </Text>
+  </View>
 
-          <View style={styles.priceRow}>
-            <Text>Delivery Charges</Text>
-            <Text>₹40</Text>
-          </View>
+  {benefits ? (
 
-          <View style={styles.priceRow}>
-            <Text style={styles.discountText}>Discount</Text>
-            <Text style={styles.discountText}>₹0</Text>
-          </View>
+    <>
 
-          <View style={styles.divider} />
+      <View style={styles.priceRow}>
+        <Text>Membership Discount</Text>
 
-          <View style={styles.priceRow}>
-            <Text style={styles.finalTotal}>Total Amount</Text>
-            <Text style={styles.finalTotal}>
-              ₹{(buyNow ? product.price : getCartTotal()) + 40}
-            </Text>
-          </View>
+        <Text style={styles.discountText}>
+          -₹{benefits.membershipDiscount.toFixed(2)}
+        </Text>
+      </View>
 
-          <View style={styles.saveBox}>
-            <Text style={styles.saveText}>
-              🎉 You'll save on this order!
-            </Text>
-          </View>
-        </View>
+      <View style={styles.priceRow}>
+        <Text>Wallet Claim</Text>
+
+        <Text style={styles.discountText}>
+          -₹{benefits.walletClaim.toFixed(2)}
+        </Text>
+      </View>
+
+      <View style={styles.priceRow}>
+        <Text>Delivery</Text>
+
+        <Text>
+          {benefits.deliveryCharge === 0
+            ? "FREE"
+            : `₹${benefits.deliveryCharge}`}
+        </Text>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.priceRow}>
+        <Text style={styles.finalTotal}>
+          Payable Amount
+        </Text>
+
+        <Text style={styles.finalTotal}>
+          ₹{benefits.payableAmount.toFixed(2)}
+        </Text>
+      </View>
+
+      <View style={styles.saveBox}>
+        <Text style={styles.saveText}>
+          🎉 You saved ₹
+          {(
+            benefits.membershipDiscount +
+            benefits.walletClaim
+          ).toFixed(2)}
+          {" "}on this order!
+        </Text>
+      </View>
+
+    </>
+
+  ) : (
+
+    <>
+
+      <View style={styles.priceRow}>
+        <Text>Delivery Charges</Text>
+        <Text>₹40</Text>
+      </View>
+
+      <View style={styles.priceRow}>
+        <Text style={styles.discountText}>
+          Discount
+        </Text>
+
+        <Text style={styles.discountText}>
+          ₹0
+        </Text>
+      </View>
+
+      <View style={styles.divider} />
+
+      <View style={styles.priceRow}>
+        <Text style={styles.finalTotal}>
+          Total Amount
+        </Text>
+
+        <Text style={styles.finalTotal}>
+          ₹{(buyNow ? product.price : getCartTotal()) + 40}
+        </Text>
+      </View>
+
+      <View style={styles.saveBox}>
+        <Text style={styles.saveText}>
+          🎉 You'll save on this order!
+        </Text>
+      </View>
+
+    </>
+
+  )}
+
+</View>
       </ScrollView>
 
       {/* Place Order Button */}
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          navigation.navigate('Payment', {
-            type: 'order',
-            buyNow,
-            product,
-          });
-        }}>
+
+  if (!selectedAddress) {
+
+    navigation.navigate("AddressList", {
+      fromCheckout: true,
+    });
+
+    return;
+  }
+
+  navigation.navigate("Payment", {
+    type: "order",
+    buyNow,
+    product,
+  });
+
+}}>
         <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
     </SafeAreaView>

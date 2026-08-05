@@ -17,13 +17,36 @@ import PaymentScreen from '../screens/PaymentScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen';
 import AdminDashboard from '../screens/AdminDashboard';
 import OrderDetailsScreen from '../screens/OrdersDetailsScreen';
+import VendorDashboardScreen from "../screens/VendorDashboardScreen";
+import { LinkingOptions } from "@react-navigation/native";
 
 const Stack = createNativeStackNavigator();
+const linking: LinkingOptions<any> = {
+  prefixes: [
+    "managanuga://",
+  ],
+
+  config: {
+    screens: {
+      Login: {
+        path: "register",
+        parse: {
+          vendor: (vendor: string) => vendor,
+        },
+      },
+    },
+  },
+};
 
 export default function AppNavigator() {
+  
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown: false}}>
+   <NavigationContainer
+  linking={linking}
+>
+      <Stack.Navigator
+  screenOptions={{ headerShown: false }}
+>
         <Stack.Screen
           name="MainTabs"
           component={BottomTabs}
@@ -85,6 +108,11 @@ export default function AppNavigator() {
          <Stack.Screen
           name="OrderDetails"
           component={OrderDetailsScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VendorDashboard"
+          component={VendorDashboardScreen}
           options={{ headerShown: false }}
         />
       </Stack.Navigator>

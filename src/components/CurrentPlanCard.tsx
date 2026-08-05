@@ -65,12 +65,12 @@ const CurrentPlanCard: React.FC<Props> = ({
 
         <View style={styles.box}>
           <Text style={styles.label}>
-            Eligible Bottles
-          </Text>
+  Monthly Limit
+</Text>
 
-          <Text style={styles.value}>
-            {membership.eligible_bottles}
-          </Text>
+<Text style={styles.value}>
+  {membership.monthly_limit_litres} Litres
+</Text>
         </View>
 
         <View style={styles.box}>

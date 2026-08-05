@@ -74,7 +74,7 @@ const UpgradePlansSection: React.FC<Props> = ({
               </Text>
 
               <Text>
-                🫒 {item.eligible_bottles} Bottles
+                🫒 {item.monthly_limit_litres} Litres / Month
               </Text>
             </View>
 
