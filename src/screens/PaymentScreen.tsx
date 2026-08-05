@@ -1,6 +1,7 @@
 import { createOrder } from "../services/paymentServices";
 import RazorpayCheckout from "react-native-razorpay";
 import React, { useState } from 'react';
+import { useAuth } from "../context/AuthContext";
 import { createOrder as createAppOrder } from "../services/orderService";
 import {
   SafeAreaView,
@@ -21,6 +22,7 @@ export default function PaymentScreen({
   route,
 }: any) {
   const { getCartTotal } = useCart();
+  const { user } = useAuth();
   const buyNow = route?.params?.buyNow;
 const product = route?.params?.product;
 
@@ -119,6 +121,7 @@ const razorpayOrder = response.data.razorpayOrder;
           razorpay_signature: data.razorpay_signature,
           paymentType: isMembership ? "MEMBERSHIP" : "ORDER",
           membershipPlanId: membershipPlan?.id,
+          userId: user.id,
           buyNow,
           productId: product?.id,
           quantity: 1,
@@ -137,7 +140,7 @@ if (!verifyResponse.ok) {
 const verifyData = JSON.parse(text);
 
 if (verifyData.success) {
-  Alert.alert("Success", "Payment Verified");
+ 
   navigation.navigate("OrderSuccess");
 } else {
   Alert.alert("Failed", verifyData.message || "Verification Failed");
