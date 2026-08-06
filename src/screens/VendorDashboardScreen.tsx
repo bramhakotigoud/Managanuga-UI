@@ -1,10 +1,4 @@
 import React, { useState } from "react";
-
-import CustomersContent from "../components/vendor/CustomersContent";
-import OrdersContent from "../components/vendor/OrdersContent";
-import InventoryContent from "../components/vendor/InventoryContent";
-import ReferralContent from "../components/vendor/ReferralContent";
-import { useNavigation } from "@react-navigation/native";
 import {
   SafeAreaView,
   View,
@@ -12,327 +6,342 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  ScrollView,
+  ImageBackground,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../context/AuthContext";
 
-export default function VendorDashboardScreen() {
-    const [activeMenu, setActiveMenu] = useState("Customers");
-  const { user, logout } = useAuth();
+import CustomersContent from "../components/vendor/CustomersContent";
+import OrdersContent from "../components/vendor/OrdersContent";
+import InventoryContent from "../components/vendor/InventoryContent";
+import ReferralContent from "../components/vendor/ReferralContent";
 
-const navigation = useNavigation<any>();
+export default function VendorDashboardScreen() {
+  const [activeMenu, setActiveMenu] = useState("Customers");
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const { user, logout } = useAuth();
+  const navigation = useNavigation<any>();
 
   return (
-
     <SafeAreaView style={styles.container}>
 
-      {/* Header */}
+      {/* HEADER SECTION  */}
+
       <View style={styles.header}>
+        <View style={styles.logoSection}>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={styles.logo}
+          />
+          <View>
+            <Text style={styles.appName}>Mana Ganuga</Text>
+            <Text style={styles.tagline}>Vendor Panel</Text>
+          </View>
+        </View>
 
-  <View style={styles.logoSection}>
+        <View style={styles.headerRight}>
+          {/* Notification Bell */}
+          <TouchableOpacity style={styles.notificationBtn}>
+            <Text style={{ fontSize: 22 }}>🔔</Text>
+          </TouchableOpacity>
 
-    <Image
-      source={require("../assets/images/logo.png")}
-      style={styles.logo}
-    />
-
-    <View>
-
-      <Text style={styles.appName}>
-        Mana Ganuga
-      </Text>
-
-      <Text style={styles.tagline}>
-        Vendor Panel
-      </Text>
-
-    </View>
-
-  </View>
-
-  <TouchableOpacity
-  style={styles.logoutButton}
-  onPress={async () => {
-
-    await logout();
-
-    navigation.reset({
-      index: 0,
-      routes: [
-        {
-          name: "Login",
-        },
-      ],
-    });
-
-  }}
->
-  <Text style={styles.logoutText}>
-    Logout
-  </Text>
-</TouchableOpacity>
-
-</View>
-
-      {/* Body */}
-      <View style={styles.body}>
-
-        {/* Left Menu */}
-       <View style={styles.sidebar}>
-
-  
-
-<TouchableOpacity
-  style={
-    activeMenu === "Customers"
-      ? styles.activeMenu
-      : styles.menuItem
-  }
-  onPress={() => setActiveMenu("Customers")}
->
-  <Text
-    style={
-      activeMenu === "Customers"
-        ? styles.activeText
-        : styles.menuText
-    }
-  >
-    👥 Customers
-  </Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-  style={
-    activeMenu === "Orders"
-      ? styles.activeMenu
-      : styles.menuItem
-  }
-  onPress={() => setActiveMenu("Orders")}
->
-  <Text
-    style={
-      activeMenu === "Orders"
-        ? styles.activeText
-        : styles.menuText
-    }
-  >
-    📦 Orders
-  </Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-  style={
-    activeMenu === "Inventory"
-      ? styles.activeMenu
-      : styles.menuItem
-  }
-  onPress={() => setActiveMenu("Inventory")}
->
-  <Text
-    style={
-      activeMenu === "Inventory"
-        ? styles.activeText
-        : styles.menuText
-    }
-  >
-    🛒 Inventory
-  </Text>
-</TouchableOpacity>
-
-<TouchableOpacity
-  style={
-    activeMenu === "Referral"
-      ? styles.activeMenu
-      : styles.menuItem
-  }
-  onPress={() => setActiveMenu("Referral")}
->
-  <Text
-    style={
-      activeMenu === "Referral"
-        ? styles.activeText
-        : styles.menuText
-    }
-  >
-    📨 Referral
-  </Text>
-</TouchableOpacity>
-</View>
-
-        {/* Right Content */}
-     <View style={styles.content}>
-
-  
-
-  {activeMenu === "Customers" && (
-    <CustomersContent />
-  )}
-
-  {activeMenu === "Orders" && (
-    <OrdersContent />
-  )}
-
-  {activeMenu === "Inventory" && (
-    <InventoryContent />
-  )}
-
-  {activeMenu === "Referral" && (
-  <ReferralContent
-  vendorId={user?.id}
-/>
-)}
-
-</View>
-
+          {/* Profile Avatar Trigger */}
+          <TouchableOpacity
+            style={styles.avatarBtn}
+            onPress={() => setShowProfileMenu(!showProfileMenu)}
+          >
+            <Text style={{ fontSize: 20 }}>👤</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
+      {showProfileMenu && (
+        <TouchableOpacity
+          style={styles.overlay}
+          activeOpacity={1}
+          onPress={() => setShowProfileMenu(false)}
+        >
+          <View style={styles.dropdownMenu}>
+            <View style={styles.dropdownHeader}>
+              <Text style={{ fontSize: 18, marginRight: 8 }}>👤</Text>
+              <Text style={{ fontWeight: "700", color: "#2D341F" }}>
+                Vendor {user?.id || "100"}
+              </Text>
+            </View>
+
+            {/* <TouchableOpacity style={{ paddingVertical: 8 }}>
+              <Text style={{ color: "#444" }}>👤 Profile</Text>
+            </TouchableOpacity> */}
+
+            <TouchableOpacity style={{ paddingVertical: 8 }}>
+              <Text style={{ color: "#444" }}>🔒 Change Password</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{ paddingVertical: 8 }}
+              onPress={async () => {
+                setShowProfileMenu(false);
+                await logout();
+                navigation.reset({
+                  index: 0,
+                  routes: [{ name: "Login" }],
+                });
+              }}
+            >
+              <Text style={{ color: "#A84B21", fontWeight: "700" }}>
+                🚪 Logout
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      )}
+
+      {/* BODY*/}
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        
+        {/* Banner inside Body */}
+        {/* 🌿 Welcome Banner with Clean Graphic Background */}
+        <ImageBackground
+          source={require("../assets/images/banner-bg.png")}
+          style={styles.banner}
+          imageStyle={{ borderRadius: 18 }}
+          resizeMode="cover"
+        >
+          <Text style={styles.bannerSubtitle}>Welcome back,</Text>
+          <Text style={styles.bannerTitle}>
+            Vendor {user?.id || "100"} 👋
+          </Text>
+          <Text style={styles.bannerDescription}>
+            Manage your business{"\n"}with ease and efficiency.
+          </Text>
+        </ImageBackground>
+        {/* Horizontal Tabs inside Body */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[
+              styles.tabItem,
+              activeMenu === "Customers" && styles.activeTabItem,
+            ]}
+            onPress={() => setActiveMenu("Customers")}
+          >
+            <Text style={{ fontSize: 20 }}>👥</Text>
+            <Text
+              style={[
+                styles.tabText,
+                activeMenu === "Customers" && styles.activeTabText,
+              ]}
+            >
+              Customers
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabItem,
+              activeMenu === "Orders" && styles.activeTabItem,
+            ]}
+            onPress={() => setActiveMenu("Orders")}
+          >
+            <Text style={{ fontSize: 20 }}>📦</Text>
+            <Text
+              style={[
+                styles.tabText,
+                activeMenu === "Orders" && styles.activeTabText,
+              ]}
+            >
+              Orders
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabItem,
+              activeMenu === "Inventory" && styles.activeTabItem,
+            ]}
+            onPress={() => setActiveMenu("Inventory")}
+          >
+            <Text style={{ fontSize: 20 }}>🛒</Text>
+            <Text
+              style={[
+                styles.tabText,
+                activeMenu === "Inventory" && styles.activeTabText,
+              ]}
+            >
+              Inventory
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.tabItem,
+              activeMenu === "Referral" && styles.activeTabItem,
+            ]}
+            onPress={() => setActiveMenu("Referral")}
+          >
+            <Text style={{ fontSize: 20 }}>🎁</Text>
+            <Text
+              style={[
+                styles.tabText,
+                activeMenu === "Referral" && styles.activeTabText,
+              ]}
+            >
+              Referral
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Dynamic Active Tab Content inside Body */}
+        <View style={styles.content}>
+          {activeMenu === "Customers" && <CustomersContent />}
+          {activeMenu === "Orders" && <OrdersContent />}
+          {activeMenu === "Inventory" && <InventoryContent />}
+          {activeMenu === "Referral" && (
+            <ReferralContent vendorId={user?.id || 100} />
+          )}
+        </View>
+
+      </ScrollView>
     </SafeAreaView>
-
   );
-
 }
 
 const styles = StyleSheet.create({
-
-  container:{
-    flex:1,
-    backgroundColor:"#FFF8EE",
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF8EE",
   },
-
   header: {
-  flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  paddingHorizontal: 20,
-  paddingVertical: 14,
-  backgroundColor: "#F8F4EC",
-},
-
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: "#F8F4EC",
+  },
   logoSection: {
-  flexDirection: "row",
-  alignItems: "center",
-  flex: 1,
-},
-
-  logo:{
-    width:40,
-    height:40,
-    marginRight:10,
-    resizeMode:"contain",
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
   },
-
-  appName:{
-    fontSize:18,
-    fontWeight:"700",
+  logo: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+    resizeMode: "contain",
   },
-
-  tagline:{
-    color:"#777",
-    fontSize:11,
+  appName: {
+    fontSize: 18,
+    fontWeight: "700",
   },
-
-  body:{
-    flex:1,
-    flexDirection:"row",
+  tagline: {
+    color: "#777",
+    fontSize: 11,
   },
-
-  sidebar:{
-    width:120,
-    backgroundColor:"#2D341F",
-    paddingTop:20,
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-
-  menuItem:{
-    paddingVertical:18,
-    paddingHorizontal:12,
+  notificationBtn: {
+    marginRight: 12,
+    position: "relative",
   },
-
-  menuText:{
-    color:"#FFF",
-    fontWeight:"600",
+  avatarBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
   },
-
-  content:{
-    flex:1,
-    justifyContent:"center",
-    alignItems:"center",
+  overlay: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 998,
+    backgroundColor: "transparent",
   },
-
-  title:{
-    fontSize:28,
-    fontWeight:"700",
+  dropdownMenu: {
+    position: "absolute",
+    top: 60,
+    right: 16,
+    backgroundColor: "#FFF",
+    borderRadius: 14,
+    padding: 14,
+    width: 180,
+    zIndex: 999,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
   },
-  logout: {
-  color: "#A84B21",
-  fontWeight: "700",
-  fontSize: 16,
-},
-
-activeMenu: {
-  backgroundColor: "#C8942E",
-  paddingVertical: 18,
-  paddingHorizontal: 14,
-},
-
-activeText: {
-  color: "#FFF",
-  fontWeight: "700",
-},
-
-cardsRow: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginTop: 25,
-},
-
-card: {
-  flex: 1,
-  backgroundColor: "#FFF",
-  marginHorizontal: 8,
-  borderRadius: 16,
-  paddingVertical: 24,
-  alignItems: "center",
-  elevation: 5,
-},
-
-cardValue: {
-  fontSize: 28,
-  fontWeight: "800",
-  color: "#A84B21",
-},
-
-cardTitle: {
-  marginTop: 8,
-  color: "#666",
-},
-
-activityCard: {
-  marginTop: 30,
-  backgroundColor: "#FFF",
-  borderRadius: 18,
-  padding: 20,
-  elevation: 4,
-},
-
-activityTitle: {
-  fontSize: 18,
-  fontWeight: "700",
-  marginBottom: 15,
-},
-
-activityText: {
-  color: "#777",
-},
-logoutButton: {
-  paddingHorizontal: 16,
-  paddingVertical: 8,
-  backgroundColor: "#A84B21",
-  borderRadius: 8,
-},
-
-logoutText: {
-  color: "#FFF",
-  fontWeight: "700",
-  fontSize: 15,
-},
-
+  dropdownHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
+  },
+  banner: {
+    borderRadius: 18,
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 12,
+    minHeight: 160,
+    justifyContent: "center",
+    overflow: "hidden", // Ensures background image respects rounded corners
+  },
+  bannerSubtitle: {
+    color: "#E2D8C3",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  bannerTitle: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "800",
+    marginVertical: 4,
+  },
+  bannerDescription: {
+    color: "#BAC8B4",
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 6,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    elevation: 2,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 8,
+    borderRadius: 12,
+  },
+  activeTabItem: {
+    backgroundColor: "#FFF9EE",
+  },
+  tabText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#555",
+  },
+  activeTabText: {
+    color: "#A84B21",
+    fontWeight: "700",
+  },
+  content: {
+    flex: 1,
+  },
 });

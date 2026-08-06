@@ -221,7 +221,7 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </ScrollView>
 
-        BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP)
+        {/* BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP) */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}

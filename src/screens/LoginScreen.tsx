@@ -2,6 +2,7 @@ import {useAuth} from '../context/AuthContext';
 import {useNavigation} from '@react-navigation/native';
 import React, {useState, useEffect} from 'react';
 import { useRoute } from '@react-navigation/native';
+
 import {
   sendOtp,
   verifyOtp,
@@ -126,6 +127,9 @@ const LoginScreen = () => {
     onChangeText={setPassword}
     placeholderTextColor="#888"
     style={styles.input}
+    autoCapitalize="none"
+  autoCorrect={false}
+  secureTextEntry
   />
 )}
           <TouchableOpacity
