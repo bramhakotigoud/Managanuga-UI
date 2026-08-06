@@ -19,6 +19,7 @@ import AdminDashboard from '../screens/AdminDashboard';
 import OrderDetailsScreen from '../screens/OrdersDetailsScreen';
 import VendorDashboardScreen from "../screens/VendorDashboardScreen";
 import { LinkingOptions } from "@react-navigation/native";
+import LocationPickerScreen from "../screens/LocationPickerScreen";
 
 const Stack = createNativeStackNavigator();
 const linking: LinkingOptions<any> = {
@@ -115,6 +116,10 @@ export default function AppNavigator() {
           component={VendorDashboardScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+  name="LocationPicker"
+  component={LocationPickerScreen}
+/>
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -1,4 +1,15 @@
 import React, { useEffect, useState } from 'react';
+import Geolocation from "react-native-geolocation-service";
+
+import {
+  check,
+  request,
+  PERMISSIONS,
+  RESULTS,
+} from "react-native-permissions";
+
+import { Platform } from "react-native";
+import { getPincodeDetails } from "../services/addressService";
 import { useRoute } from '@react-navigation/native';
 import {
   SafeAreaView,
@@ -41,7 +52,66 @@ export default function AddAddressScreen({ navigation }: any) {
       setAddressType(editData.type || editData.addressType || 'Home');
     }
   }, [editData]);
+const requestLocationPermission = async () => {
 
+  const permission =
+    Platform.OS === "ios"
+      ? PERMISSIONS.IOS.LOCATION_WHEN_IN_USE
+      : PERMISSIONS.ANDROID.ACCESS_FINE_LOCATION;
+
+  let result = await check(permission);
+
+  if (result !== RESULTS.GRANTED) {
+    result = await request(permission);
+  }
+
+  return result === RESULTS.GRANTED;
+
+};
+const handleCurrentLocation = async () => {
+
+  const granted =
+    await requestLocationPermission();
+
+  if (!granted) {
+
+    Alert.alert(
+      "Permission Required",
+      "Location permission is required."
+    );
+
+    return;
+
+  }
+
+  Geolocation.getCurrentPosition(
+
+    position => {
+
+      console.log(position.coords);
+
+    },
+
+    error => {
+
+      console.log(error);
+
+      Alert.alert(
+        "Location Error",
+        error.message
+      );
+
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 10000,
+    }
+
+  );
+
+};
   const handleSaveAddress = async () => {
     if (!name.trim()) {
       Alert.alert('Validation Error', 'Please enter your name');
@@ -139,11 +209,24 @@ export default function AddAddressScreen({ navigation }: any) {
       </View>
 
       {/* CENTERED PAGE TITLE */}
-      <Text style={styles.titleCenter}>
-        {editData ? 'Edit Address' : 'Add Address'}
-      </Text>
-
+     
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formContainer}>
+        <View style={styles.locationRow}>
+
+  <TouchableOpacity
+    style={styles.locationButton}
+    onPress={() =>
+  navigation.navigate("LocationPicker")
+}
+  >
+    <Text style={styles.locationText}>
+      📍 Current Location
+    </Text>
+  </TouchableOpacity>
+
+  
+
+</View>
         <TextInput
           placeholder="Full Name"
           placeholderTextColor="#777"
@@ -189,7 +272,47 @@ export default function AddAddressScreen({ navigation }: any) {
         />
 
         <TextInput
+          placeholder="Pincode"
+          placeholderTextColor="#777"
+          keyboardType="number-pad"
+          maxLength={6}
+          style={styles.input}
+          value={pincode}
+          onChangeText={async (text) => {
+
+  const value = text.replace(/[^0-9]/g, "");
+
+  setPincode(value);
+
+  if (value.length === 6) {
+
+    try {
+
+      const response =
+        await getPincodeDetails(value);
+
+      if (response.success) {
+
+        setCity(response.data.city);
+
+        setState(response.data.state);
+
+      }
+
+    } catch (e) {
+
+      console.log(e);
+
+    }
+
+  }
+
+}}
+        />
+
+        <TextInput
           placeholder="City"
+           editable={false}
           placeholderTextColor="#777"
           style={styles.input}
           value={city}
@@ -198,23 +321,14 @@ export default function AddAddressScreen({ navigation }: any) {
 
         <TextInput
           placeholder="State"
+           editable={false}
           placeholderTextColor="#777"
           style={styles.input}
           value={state}
           onChangeText={setState}
         />
 
-        <TextInput
-          placeholder="Pincode"
-          placeholderTextColor="#777"
-          keyboardType="number-pad"
-          maxLength={6}
-          style={styles.input}
-          value={pincode}
-          onChangeText={(text) => {
-            setPincode(text.replace(/[^0-9]/g, ''));
-          }}
-        />
+       
 
         <Text style={styles.sectionTitle}>Address Type</Text>
 
@@ -386,5 +500,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  locationRow: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginBottom: 18,
+},
+
+locationButton: {
+  flex: 1,
+  backgroundColor: "#2D341F",
+  paddingVertical: 14,
+  borderRadius: 12,
+  alignItems: "center",
+  marginHorizontal: 4,
+},
+
+locationText: {
+  color: "#FFF",
+  fontWeight: "700",
+  fontSize: 14,
+},
 });
 

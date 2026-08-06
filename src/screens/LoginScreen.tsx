@@ -128,8 +128,8 @@ const LoginScreen = () => {
     placeholderTextColor="#888"
     style={styles.input}
     autoCapitalize="none"
-  autoCorrect={false}
-  secureTextEntry
+    autoCorrect={false}
+    secureTextEntry
   />
 )}
           <TouchableOpacity

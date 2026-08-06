@@ -70,5 +70,10 @@
         </array>
     </dict>
 </array>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Mana Ganuga uses your location to automatically fill your delivery address.</string>
+
+<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+<string>Mana Ganuga uses your location to automatically fill your delivery address.</string>
 </dict>
 </plist>
