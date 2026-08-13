@@ -45,7 +45,8 @@ export const loginWithPassword = async (
     },
     body: JSON.stringify({
       mobile,
-      password,
+      password: password.trim(),
+
     }),
   });
 
