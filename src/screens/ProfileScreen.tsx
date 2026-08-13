@@ -162,7 +162,7 @@ export default function ProfileScreen({ navigation }: any) {
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate('Subscription')}>
-          <Text style={styles.menuText}>🎖️ Subscription</Text>
+          <Text style={styles.menuText}>Subscription</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -360,4 +360,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
+  membershipIcon: {
+  width: 22,
+  height: 22,
+  resizeMode: 'contain',
+},
 });

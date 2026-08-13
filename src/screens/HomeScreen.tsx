@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,12 +12,15 @@ import {
   Share,
   Animated,
 } from 'react-native';
+import { Search } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
-
+import { useFocusEffect } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
+import { getUnreadCount } from '../services/notificationService';
 // Get screen width dynamically (Subtract 30 to account for container padding: 15 left + 15 right)
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 30;
@@ -51,12 +54,36 @@ export const HeaderCartButton = () => {
 // Main HomeScreen component
 const HomeScreen = () => {
   const navigation = useNavigation();
+  const {user} = useAuth();
+  const [unreadNotificationCount, setUnreadNotificationCount] =
+  useState(0);
   const [defaultAddress, setDefaultAddress] = useState<any>(null);
   const [activeBanner, setActiveBanner] = useState(0);
   // Animation state for continuous pulsing effect
   // Animation value tracking translation on X-axis
   const slideAnim = React.useRef(new Animated.Value(150)).current; // Starts 150px off-screen to the right
+useFocusEffect(
+  useCallback(() => {
+    const loadUnreadCount = async () => {
+      if (!user?.id) {
+        setUnreadNotificationCount(0);
+        return;
+      }
 
+      try {
+        const response = await getUnreadCount(user.id);
+
+        if (response.success) {
+          setUnreadNotificationCount(response.count || 0);
+        }
+      } catch (error) {
+        console.error('Unread Notification Error:', error);
+      }
+    };
+
+    loadUnreadCount();
+  }, [user?.id]),
+);
   useEffect(() => {
     // Loop: Slide in from right -> Pause -> Slide out to right -> Pause 2s
     const slideAnimation = Animated.loop(
@@ -154,14 +181,29 @@ const HomeScreen = () => {
 
         <View style={styles.headerIcons}>
           <TouchableOpacity
-            onPress={() => navigation.navigate('Subscription' as never)}>
-            <Text style={styles.icon}>🎖️</Text>
-          </TouchableOpacity>
+  onPress={() => navigation.navigate('Subscription' as never)}>
+  <Image
+    source={require('../assets/images/membership_wallet.png')}
+    style={styles.membershipIcon}
+  />
+</TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Notifications' as never)}>
-            <Text style={styles.icon}>🔔</Text>
-          </TouchableOpacity>
+         <TouchableOpacity
+  onPress={() => navigation.navigate('Notifications' as never)}
+  style={styles.notificationButton}>
+  
+  <Text style={styles.icon}>🔔</Text>
+
+  {unreadNotificationCount > 0 && (
+    <View style={styles.notificationBadge}>
+      <Text style={styles.notificationBadgeText}>
+        {unreadNotificationCount > 99
+          ? '99+'
+          : unreadNotificationCount}
+      </Text>
+    </View>
+  )}
+</TouchableOpacity>
 
           {/* Cart Icon with Live Badge */}
           <HeaderCartButton />
@@ -177,14 +219,20 @@ const HomeScreen = () => {
 
         {/* Search */}
         <View style={styles.searchContainer}>
-          <Text style={styles.searchEmoji}>🔍</Text>
-          <TextInput
-            placeholder="Search oils"
-            placeholderTextColor="#777"
-            style={styles.searchInput}
-          />
-          <Text style={styles.searchEmoji}>🛒</Text>
-        </View>
+  <Search
+    size={20}
+    color="#777"
+    strokeWidth={2}
+  />
+
+  <TextInput
+    placeholder="Search oils"
+    placeholderTextColor="#777"
+    style={styles.searchInput}
+  />
+
+  <Text style={styles.searchEmoji}>🛒</Text>
+</View>
 
         <ScrollView
           horizontal
@@ -383,19 +431,7 @@ const HomeScreen = () => {
 
     
       {/* Floating Slide-in Referral Button */}
-      <Animated.View
-        style={[
-          styles.floatingShareBtn,
-          { transform: [{ translateX: slideAnim }] },
-        ]}>
-        <TouchableOpacity
-          style={styles.floatingInner}
-          onPress={handleShareReferral}
-          activeOpacity={0.8}>
-          <Text style={styles.floatingShareIcon}>🎁</Text>
-          <Text style={styles.floatingShareText}>Refer</Text>
-        </TouchableOpacity>
-      </Animated.View>
+    
     </SafeAreaView>
   );
 };
@@ -666,4 +702,37 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  membershipIcon: {
+  width: 30,
+  height: 30,
+  resizeMode: 'contain',
+},
+notificationButton: {
+  position: 'relative',
+  width: 40,
+  height: 40,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+
+notificationBadge: {
+  position: 'absolute',
+  top: -2,
+  right: -2,
+  minWidth: 18,
+  height: 18,
+  borderRadius: 9,
+  backgroundColor: '#A84B21',
+  alignItems: 'center',
+  justifyContent: 'center',
+  paddingHorizontal: 4,
+  borderWidth: 2,
+  borderColor: '#FFFFFF',
+},
+
+notificationBadgeText: {
+  color: '#FFFFFF',
+  fontSize: 9,
+  fontWeight: '800',
+},
 });

@@ -58,3 +58,40 @@ export const loginWithPassword = async (
 
   return data;
 };
+export const sendForgotPasswordOtp = async (
+  mobile: string
+) => {
+  const response = await fetch(
+    `${BASE_URL}/auth/forgot-password/send-otp`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ mobile }),
+    }
+  );
+
+  return await response.json();
+};
+
+export const resetPasswordWithOtp = async (
+  mobile: string,
+  otp: string
+) => {
+  const response = await fetch(
+    `${BASE_URL}/auth/forgot-password/reset`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mobile,
+        otp,
+      }),
+    }
+  );
+
+  return await response.json();
+};

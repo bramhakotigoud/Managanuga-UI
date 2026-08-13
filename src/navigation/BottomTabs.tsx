@@ -1,14 +1,14 @@
 import React from 'react';
-import {Text} from 'react-native';
+import {Image, Pressable, Text, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import { HeaderCartButton } from '../screens/HomeScreen';
 
 import HomeScreen from '../screens/HomeScreen';
 import ProductsScreen from '../screens/ProductsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
-import { useAuth } from '../context/AuthContext';
+
+import {useAuth} from '../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,18 +18,7 @@ export default function BottomTabs() {
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
-        // Show top header with live Cart Badge across all tabs
         headerShown: false,
-        headerRight: () => <HeaderCartButton />,
-        headerStyle: {
-          backgroundColor: '#F8F4EC',
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        headerTintColor: '#2D341F',
-        headerTitleStyle: {
-          fontWeight: '700',
-        },
 
         tabBarActiveTintColor: '#A84B21',
         tabBarInactiveTintColor: '#999',
@@ -57,8 +46,6 @@ export default function BottomTabs() {
             icon = '👤';
           } else if (route.name === 'Orders') {
             icon = '📦';
-          } else if (route.name === 'More') {
-            icon = '☰';
           }
 
           return (
@@ -73,17 +60,50 @@ export default function BottomTabs() {
         },
       })}>
       
-      {/* Hide header on Home because HomeScreen has its own built-in top header */}
+      {/* HOME */}
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={{ headerShown: false }}
+        options={{
+          headerShown: false,
+        }}
       />
 
+      {/* PRODUCTS */}
       <Tab.Screen
         name="Products"
         component={ProductsScreen}
       />
+
+      {/* GIF BUTTON */}
+      <Tab.Screen
+        name="GIF"
+        component={ProductsScreen}
+        options={({navigation}) => ({
+          tabBarLabel: '',
+          tabBarButton: () => (
+            <Pressable
+              onPress={() => navigation.navigate('Products')}
+              style={{
+                flex: 1,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              
+              <Image
+                source={require('../assets/gif/mana.gif')}
+                style={{
+                  width: 60,
+                  height: 60,
+                }}
+                resizeMode="contain"
+              />
+            </Pressable>
+          ),
+        })}
+      />
+
+      {/* PROFILE */}
       <Tab.Screen
         name="Profile"
         component={
@@ -93,16 +113,12 @@ export default function BottomTabs() {
         }
       />
 
+      {/* ORDERS */}
       <Tab.Screen
         name="Orders"
         component={OrdersScreen}
       />
 
-      <Tab.Screen
-        name="More"
-        component={ProductsScreen}
-      />
-      
     </Tab.Navigator>
   );
 }

@@ -13,6 +13,7 @@ import {
   StyleSheet,
   Alert,
   Image,
+  Modal,
 } from 'react-native';
 import { useCart } from '../context/CartContext';
 import Config from "react-native-config";
@@ -52,6 +53,15 @@ const totalAmount = isMembership
     useState('UPI');
     const [benefits, setBenefits] =
   useState<any>(null);
+  const [showSubscriptionTerms, setShowSubscriptionTerms] =
+  useState(isMembership);
+
+const [understoodTerms, setUnderstoodTerms] =
+  useState(false);
+const handleAcceptTerms = () => {
+  setUnderstoodTerms(true);
+  setShowSubscriptionTerms(false);
+};
 
 const [payableAmount, setPayableAmount] =
   useState(totalAmount);
@@ -546,6 +556,246 @@ const handleMembershipPayment = async () => {
   )}
 
 </View>
+      {/* SUBSCRIPTION TERMS & CONDITIONS */}
+      <Modal
+        visible={isMembership && showSubscriptionTerms}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          // User must accept the terms before closing
+        }}
+      >
+        <View style={styles.termsOverlay}>
+
+          <View style={styles.termsModal}>
+
+            <Text style={styles.termsTitle}>
+              MANA GANUGA
+            </Text>
+
+            <Text style={styles.termsSubtitle}>
+              Membership Terms & Conditions
+            </Text>
+
+            <ScrollView
+              style={styles.termsScroll}
+              showsVerticalScrollIndicator={true}
+            >
+
+              <Text style={styles.termsSection}>
+                1. Subscription Validity
+              </Text>
+
+              <Text style={styles.termsText}>
+                • The subscription is valid only for the selected plan
+                duration (Monthly, Quarterly, Half-Yearly, or Annual).
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Benefits will automatically expire upon completion of
+                the subscription period unless renewed.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                2. Subscription Benefits
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Discounts, special offers, loyalty rewards, and
+                promotional benefits are available only during the active
+                subscription period.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Subscription benefits cannot be exchanged for cash.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                3. Product Availability
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Product supply is subject to availability.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • In the event of stock shortages, APFDC LLP reserves the
+                right to provide an equivalent product or reschedule
+                delivery.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                4. Delivery Terms
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Deliveries will be made to the registered address
+                provided by the subscriber.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Customers are responsible for providing accurate
+                address and contact information.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Delivery schedules may vary due to public holidays,
+                weather conditions, transportation issues, or other
+                unforeseen circumstances.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                5. Subscription Benefits
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Discounts, special offers, loyalty rewards, and
+                promotional benefits are available only during the active
+                subscription period.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                6. Customer Responsibilities
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Subscribers must maintain accurate and up-to-date
+                personal information.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Any change in address, phone number, or other details
+                must be communicated promptly.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                7. Cancellation and Termination
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Subscription fees added to wallet can be claimed only
+                on monthly remittance.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • APFDC LLP reserves the right to suspend or terminate
+                any subscription found to be involved in fraudulent
+                activity, misuse, or violation of company policies.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                8. Renewal Policy
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Subscribers are responsible for renewing their plans
+                before the expiry date.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Benefits may be discontinued until renewal is completed.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                9. Changes to Terms and Plans
+              </Text>
+
+              <Text style={styles.termsText}>
+                • APFDC LLP reserves the right to modify subscription
+                plans, pricing, benefits, and terms & conditions at any
+                time.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                10. Privacy Policy
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Customer information will be used solely for order
+                processing, service delivery, customer support, and
+                promotional communications.
+              </Text>
+
+              <Text style={styles.termsText}>
+                • Personal information will not be shared with third
+                parties except as required by law.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                11. Force Majeure
+              </Text>
+
+              <Text style={styles.termsText}>
+                APFDC LLP shall not be held responsible for delays or
+                inability to provide services due to circumstances beyond
+                its reasonable control, including natural disasters,
+                government regulations, transportation disruptions,
+                strikes, or emergencies.
+              </Text>
+
+              <Text style={styles.termsSection}>
+                12. Dispute Resolution
+              </Text>
+
+              <Text style={styles.termsText}>
+                Any disputes arising out of this subscription shall be
+                subject to the jurisdiction of the courts in Hyderabad,
+                Telangana.
+              </Text>
+
+              <View style={{ height: 15 }} />
+
+            </ScrollView>
+
+            {/* UNDERSTAND CHECKBOX */}
+            <TouchableOpacity
+              style={styles.termsCheckboxRow}
+              activeOpacity={0.8}
+              onPress={() =>
+                setUnderstoodTerms(!understoodTerms)
+              }
+            >
+
+              <View
+                style={[
+                  styles.termsCheckbox,
+                  understoodTerms &&
+                    styles.termsCheckboxChecked,
+                ]}
+              >
+                {understoodTerms && (
+                  <Text style={styles.termsCheckmark}>
+                    ✓
+                  </Text>
+                )}
+              </View>
+
+              <Text style={styles.termsCheckboxText}>
+                I understand and agree to the Subscription Terms &
+                Conditions.
+              </Text>
+
+            </TouchableOpacity>
+
+            {/* CONTINUE BUTTON */}
+            <TouchableOpacity
+              style={[
+                styles.termsContinueButton,
+                !understoodTerms &&
+                  styles.termsContinueDisabled,
+              ]}
+              disabled={!understoodTerms}
+             onPress={handleAcceptTerms}
+            >
+              <Text style={styles.termsContinueText}>
+                I Understand
+              </Text>
+            </TouchableOpacity>
+
+          </View>
+
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -768,6 +1018,123 @@ header: {
   },
    headerRightPlaceholder: {
     width: 36,
+  },
+    /* ================================
+     SUBSCRIPTION TERMS MODAL
+  ================================= */
+
+  termsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 18,
+  },
+
+  termsModal: {
+    width: '100%',
+    maxHeight: '90%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 20,
+
+    elevation: 12,
+
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 6,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+  },
+
+  termsTitle: {
+    textAlign: 'center',
+    fontSize: 21,
+    fontWeight: '800',
+    color: '#6B4F2A',
+  },
+
+  termsSubtitle: {
+    textAlign: 'center',
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 4,
+    marginBottom: 15,
+  },
+
+  termsScroll: {
+    maxHeight: 430,
+  },
+
+  termsSection: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#3E2B1F',
+    marginTop: 14,
+    marginBottom: 7,
+  },
+
+  termsText: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: '#555',
+    marginBottom: 7,
+  },
+
+  termsCheckboxRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginTop: 12,
+    marginBottom: 15,
+  },
+
+  termsCheckbox: {
+    width: 23,
+    height: 23,
+    borderWidth: 2,
+    borderColor: '#6B4F2A',
+    borderRadius: 5,
+    marginRight: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  termsCheckboxChecked: {
+    backgroundColor: '#6B4F2A',
+  },
+
+  termsCheckmark: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+
+  termsCheckboxText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#333',
+  },
+
+  termsContinueButton: {
+    height: 50,
+    backgroundColor: '#6B4F2A',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  termsContinueDisabled: {
+    backgroundColor: '#B8B8B8',
+  },
+
+  termsContinueText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   
 

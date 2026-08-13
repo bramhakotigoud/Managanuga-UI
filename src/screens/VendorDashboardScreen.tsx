@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
-  ScrollView,
   ImageBackground,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -99,7 +98,7 @@ export default function VendorDashboardScreen() {
 
       {/* BODY*/}
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={styles.body}>
         
         {/* Banner inside Body */}
         {/* 🌿 Welcome Banner with Clean Graphic Background */}
@@ -202,7 +201,7 @@ export default function VendorDashboardScreen() {
           )}
         </View>
 
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -211,6 +210,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFF8EE",
+  },
+    body: {
+    flex: 1,
   },
   header: {
     flexDirection: "row",

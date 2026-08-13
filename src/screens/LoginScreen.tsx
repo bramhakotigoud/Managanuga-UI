@@ -6,6 +6,8 @@ import {
   sendOtp,
   verifyOtp,
   loginWithPassword,
+  sendForgotPasswordOtp,
+  resetPasswordWithOtp,
 } from '../services/authService';
 
 import {
@@ -21,6 +23,26 @@ import {
 } from 'react-native';
 
 const LoginScreen = () => {
+  const {login} = useAuth();
+    const [mobile, setMobile] = useState('');
+    
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+    const [loginMode, setLoginMode] = useState("mobile");
+    const [password, setPassword] = useState("");
+    const [otpError, setOtpError] = useState("");
+    const [forgotPassword, setForgotPassword] = useState(false);
+const [forgotOtp, setForgotOtp] = useState("");
+    const navigation = useNavigation();
+    const route = useRoute<any>();
+    const [vendorId, setVendorId] = useState<string | null>(null);
+    const [resendTimer, setResendTimer] = useState(20);
+const [canResend, setCanResend] = useState(false);
+    useEffect(() => {
+
+  navigation.getParent()?.setOptions({
+    tabBarStyle: { display: "none" },
+  });
   const { login } = useAuth();
 
   const [mobile, setMobile] = useState('');
@@ -61,6 +83,22 @@ const LoginScreen = () => {
       });
     };
   }, []);
+useEffect(() => {
+  if (loginMode !== "otp" || !otpSent) {
+    return;
+  }
+
+  if (resendTimer <= 0) {
+    setCanResend(true);
+    return;
+  }
+
+  const timer = setInterval(() => {
+    setResendTimer(prev => prev - 1);
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [loginMode, otpSent, resendTimer]);  
 
   const handleLogin = async () => {
     try {
@@ -401,6 +439,53 @@ const LoginScreen = () => {
               </Text>
 
           )}
+{loginMode === "otp" && (
+  <View style={styles.resendContainer}>
+    <Text style={styles.resendText}>
+      Didn't receive the OTP?
+    </Text>
+
+    {canResend ? (
+      <TouchableOpacity
+        onPress={async () => {
+          try {
+            setCanResend(false);
+            setResendTimer(20);
+            setOtp("");
+            setOtpError("");
+
+            const response = await sendOtp(mobile);
+
+            if (response.existingUser) {
+              setLoginMode("password");
+              return;
+            }
+
+            
+          } catch (err: any) {
+            console.log("Resend OTP Error:", err);
+
+            setCanResend(true);
+            setResendTimer(0);
+
+            Alert.alert(
+              "Error",
+              err?.response?.data?.message ||
+                "Failed to resend OTP. Please try again.",
+            );
+          }
+        }}>
+        <Text style={styles.resendActive}>
+          Resend OTP
+        </Text>
+      </TouchableOpacity>
+    ) : (
+      <Text style={styles.resendDisabled}>
+        Resend in {resendTimer}s
+      </Text>
+    )}
+  </View>
+)}
 
           {/* ======================================
               PASSWORD INPUT
@@ -426,6 +511,21 @@ const LoginScreen = () => {
             />
 
           )}
+{loginMode === "password" && (
+  <TouchableOpacity
+    onPress={() => {
+      setForgotPassword(true);
+      setOtp("");
+      setOtpError("");
+      setLoginMode("mobile");
+      setMobile("");
+    }}
+  >
+    <Text style={styles.forgotPasswordText}>
+      Forgot Password?
+    </Text>
+  </TouchableOpacity>
+)}
 
           {/* ======================================
               LOGIN BUTTON
@@ -448,6 +548,224 @@ const LoginScreen = () => {
 
             </Text>
 
+           style={styles.loginButton}
+         onPress={async () => {
+  try {
+
+    // STEP 1 - Enter Mobile
+    if (loginMode === "mobile") {
+
+  if (!mobile || mobile.length !== 10) {
+    Alert.alert(
+      "Invalid Mobile",
+      "Please enter a valid 10-digit mobile number."
+    );
+    return;
+  }
+
+  // FORGOT PASSWORD
+  if (forgotPassword) {
+    console.log("🔐 FORGOT PASSWORD FLOW");
+    console.log("📱 Mobile:", mobile);
+
+    const response = await sendForgotPasswordOtp(mobile);
+
+    console.log(
+      "🔐 FORGOT PASSWORD RESPONSE:",
+      response
+    );
+
+    if (!response.success) {
+      Alert.alert(
+        "Forgot Password",
+        response.message || "Unable to send OTP."
+      );
+      return;
+    }
+
+    setOtp("");
+    setOtpError("");
+    setLoginMode("otp");
+
+    return;
+  }
+
+  // NORMAL LOGIN
+  const response = await sendOtp(mobile);
+
+  if (response.existingUser) {
+    setLoginMode("password");
+    return;
+  }
+
+  setOtpSent(true);
+  setLoginMode("otp");
+
+  return;
+}
+
+    // STEP 2 - Verify OTP
+    if (loginMode === "otp") {
+      if (forgotPassword) {
+
+  const response = await resetPasswordWithOtp(
+    mobile,
+    otp
+  );
+
+  console.log(
+    "🔐 RESET PASSWORD RESPONSE:",
+    response
+  );
+
+  if (!response.success) {
+    setOtpError(
+      response.message || "Invalid OTP"
+    );
+    return;
+  }
+
+  setOtpError("");
+
+  Alert.alert(
+    "Password Reset",
+    "Your password has been reset successfully. The new password has been sent to your mobile.",
+    [
+      {
+        text: "OK",
+        onPress: () => {
+          setForgotPassword(false);
+          setOtp("");
+          setLoginMode("password");
+        },
+      },
+    ]
+  );
+
+  return;
+} 
+
+      const response = await verifyOtp(mobile, otp,   vendorId);
+
+// Invalid OTP
+if (!response.token) {
+  setOtpError(response.message || "Please enter a valid OTP");
+  return;
+}
+
+// Clear previous error
+setOtpError("");
+
+// Login successful
+login(response.token, response.user);
+
+// Vendor Login
+if (response.user.role === "VENDOR") {
+
+  navigation.reset({
+    index: 0,
+    routes: [
+      {
+        name: "VendorDashboard" as never,
+      },
+    ],
+  });
+
+  return;
+}
+
+// Customer Login
+if (route.params?.fromCart) {
+
+  navigation.navigate("Cart" as never);
+
+} else if (route.params?.fromSubscription) {
+
+  navigation.navigate("Subscription" as never);
+
+} else {
+
+  navigation.navigate("MainTabs" as never);
+
+}
+
+return;
+    }
+
+   
+   // STEP 3 - Login with Password
+if (loginMode === "password") {
+
+  const response = await loginWithPassword(
+    mobile,
+    password
+  );
+
+  // Login failed
+  if (!response.token) {
+    Alert.alert(
+      "Login Failed",
+      response.message || "Invalid password"
+    );
+    return;
+  }
+
+  // Login successful
+ login(response.token, response.user);
+
+// Vendor Login
+if (response.user.role === "VENDOR") {
+
+  navigation.reset({
+    index: 0,
+    routes: [
+      {
+        name: "VendorDashboard" as never,
+      },
+    ],
+  });
+
+  return;
+}
+
+// Customer Login
+if (route.params?.fromCart) {
+
+  navigation.navigate("Cart" as never);
+
+} else if (route.params?.fromSubscription) {
+
+  navigation.navigate("Subscription" as never);
+
+} else {
+
+  navigation.navigate("MainTabs" as never);
+
+}
+}
+
+  } catch (err: any) {
+
+    console.log(err);
+
+    Alert.alert(
+      "Error",
+      err?.response?.data?.message || "Something went wrong"
+    );
+
+  }
+}}
+           
+          >
+          <Text style={styles.loginButtonText}>
+            {
+  loginMode === "mobile"
+    ? "NEXT"
+    : loginMode === "otp"
+    ? "VERIFY OTP"
+    : "LOGIN"
+}
+          </Text>
           </TouchableOpacity>
 
           {/* ======================================
@@ -604,5 +922,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+resendContainer: {
+  flexDirection: 'row',
+  justifyContent: 'center',
+  alignItems: 'center',
+  marginTop: 2,
+  marginBottom: 15,
+},
+
+resendText: {
+  color: '#666',
+  fontSize: 13,
+},
+
+resendActive: {
+  color: '#A84B21',
+  fontSize: 13,
+  fontWeight: '700',
+  marginLeft: 5,
+},
+
+resendDisabled: {
+  color: '#999',
+  fontSize: 13,
+  fontWeight: '600',
+  marginLeft: 5,
+},
+forgotPasswordText: {
+  textAlign: 'right',
+  color: '#A84B21',
+  fontSize: 14,
+  fontWeight: '700',
+  marginTop: -5,
+  marginBottom: 14,
+},
 
 });
