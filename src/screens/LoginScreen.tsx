@@ -24,26 +24,8 @@ import {
 
 const LoginScreen = () => {
   const {login} = useAuth();
-    const [mobile, setMobile] = useState('');
-    
-    const [otp, setOtp] = useState('');
-    const [otpSent, setOtpSent] = useState(false);
-    const [loginMode, setLoginMode] = useState("mobile");
-    const [password, setPassword] = useState("");
-    const [otpError, setOtpError] = useState("");
-    const [forgotPassword, setForgotPassword] = useState(false);
-const [forgotOtp, setForgotOtp] = useState("");
-    const navigation = useNavigation();
-    const route = useRoute<any>();
-    const [vendorId, setVendorId] = useState<string | null>(null);
-    const [resendTimer, setResendTimer] = useState(20);
-const [canResend, setCanResend] = useState(false);
-    useEffect(() => {
-
-  navigation.getParent()?.setOptions({
-    tabBarStyle: { display: "none" },
-  });
-  const { login } = useAuth();
+  const navigation = useNavigation();
+  const route = useRoute<any>();
 
   const [mobile, setMobile] = useState('');
   const [otp, setOtp] = useState('');
@@ -51,12 +33,13 @@ const [canResend, setCanResend] = useState(false);
   const [loginMode, setLoginMode] = useState('mobile');
   const [password, setPassword] = useState('');
   const [otpError, setOtpError] = useState('');
-
-  const navigation = useNavigation();
-  const route = useRoute<any>();
-
+  const [forgotPassword, setForgotPassword] = useState(false);
   const [vendorId, setVendorId] = useState<string | null>(null);
 
+  const [resendTimer, setResendTimer] = useState(20);
+  const [canResend, setCanResend] = useState(false);
+
+  // Hide bottom tab bar while login screen is open
   useEffect(() => {
     navigation.getParent()?.setOptions({
       tabBarStyle: {
@@ -65,11 +48,7 @@ const [canResend, setCanResend] = useState(false);
     });
 
     if (route.params?.vendor) {
-      console.log(
-        'Referral Vendor:',
-        route.params.vendor
-      );
-
+      console.log('Referral Vendor:', route.params.vendor);
       setVendorId(route.params.vendor);
     }
 
@@ -82,272 +61,25 @@ const [canResend, setCanResend] = useState(false);
         },
       });
     };
-  }, []);
-useEffect(() => {
-  if (loginMode !== "otp" || !otpSent) {
-    return;
-  }
+  }, [navigation, route]);
 
-  if (resendTimer <= 0) {
-    setCanResend(true);
-    return;
-  }
-
-  const timer = setInterval(() => {
-    setResendTimer(prev => prev - 1);
-  }, 1000);
-
-  return () => clearInterval(timer);
-}, [loginMode, otpSent, resendTimer]);  
-
-  const handleLogin = async () => {
-    try {
-
-      // ==========================================
-      // STEP 1 - ENTER MOBILE NUMBER
-      // ==========================================
-
-      if (loginMode === 'mobile') {
-
-        const response = await sendOtp(mobile);
-
-        if (response.existingUser) {
-          setLoginMode('password');
-          return;
-        }
-
-        setOtpSent(true);
-        setLoginMode('otp');
-
-        return;
-      }
-
-      // ==========================================
-      // STEP 2 - VERIFY OTP
-      // ==========================================
-
-      if (loginMode === 'otp') {
-
-        const response = await verifyOtp(
-          mobile,
-          otp,
-          vendorId
-        );
-
-        // Invalid OTP
-        if (!response.token) {
-          setOtpError(
-            response.message ||
-            'Please enter a valid OTP'
-          );
-
-          return;
-        }
-
-        // Clear previous OTP error
-        setOtpError('');
-
-        // Login successful
-        login(
-          response.token,
-          response.user
-        );
-
-        // ==========================================
-        // VENDOR LOGIN
-        // ==========================================
-
-        if (response.user.role === 'VENDOR') {
-
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'VendorDashboard' as never,
-              },
-            ],
-          });
-
-          return;
-        }
-
-        // ==========================================
-        // RESELLER LOGIN
-        // ==========================================
-
-        if (response.user.role === 'RESELLER') {
-
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'ResellerDashboard' as never,
-              },
-            ],
-          });
-
-          return;
-        }
-
-        // ==========================================
-        // CUSTOMER LOGIN
-        // ==========================================
-
-        if (route.params?.fromCart) {
-
-          navigation.navigate(
-            'Cart' as never
-          );
-
-        } else if (
-          route.params?.fromSubscription
-        ) {
-
-          navigation.navigate(
-            'Subscription' as never
-          );
-
-        } else {
-
-          navigation.navigate(
-            'MainTabs' as never
-          );
-        }
-
-        return;
-      }
-
-      // ==========================================
-      // STEP 3 - LOGIN WITH PASSWORD
-      // ==========================================
-
-      if (loginMode === 'password') {
-
-        const response =
-          await loginWithPassword(
-            mobile,
-            password
-          );
-
-        console.log(
-          'LOGIN RESPONSE:',
-          response
-        );
-
-        // Login failed
-        if (!response.token) {
-
-          Alert.alert(
-            'Login Failed',
-            response.message ||
-            'Invalid password'
-          );
-
-          return;
-        }
-
-        // Login successful
-        login(
-          response.token,
-          response.user
-        );
-
-        // ==========================================
-        // VENDOR LOGIN
-        // ==========================================
-
-        if (response.user.role === 'VENDOR') {
-
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'VendorDashboard' as never,
-              },
-            ],
-          });
-
-          return;
-        }
-
-        // ==========================================
-        // RESELLER LOGIN
-        // ==========================================
-
-        if (response.user.role === 'RESELLER') {
-
-          navigation.reset({
-            index: 0,
-            routes: [
-              {
-                name: 'ResellerDashboard' as never,
-              },
-            ],
-          });
-
-          return;
-        }
-
-        // ==========================================
-        // CUSTOMER LOGIN
-        // ==========================================
-
-        if (route.params?.fromCart) {
-
-          navigation.navigate(
-            'Cart' as never
-          );
-
-        } else if (
-          route.params?.fromSubscription
-        ) {
-
-          navigation.navigate(
-            'Subscription' as never
-          );
-
-        } else {
-
-          navigation.navigate(
-            'MainTabs' as never
-          );
-        }
-
-        return;
-      }
-
-    } catch (err: any) {
-
-      console.log(
-        'LOGIN ERROR:',
-        err
-      );
-
-      Alert.alert(
-        'Error',
-        err?.response?.data?.message ||
-        err?.message ||
-        'Something went wrong'
-      );
+  // OTP resend timer
+  useEffect(() => {
+    if (loginMode !== 'otp' || !otpSent) {
+      return;
     }
-  };
 
-  // ==========================================
-  // LOGIN AGAIN
-  // SAME BEHAVIOR AS YOUR OLD CODE
-  // ==========================================
+    if (resendTimer <= 0) {
+      setCanResend(true);
+      return;
+    }
 
-  const resetLogin = () => {
+    const timer = setInterval(() => {
+      setResendTimer(prev => prev - 1);
+    }, 1000);
 
-    setMobile('');
-    setOtp('');
-    setPassword('');
-    setOtpSent(false);
-    setOtpError('');
-    setLoginMode('mobile');
-
-  };
-
+    return () => clearInterval(timer);
+  }, [loginMode, otpSent, resendTimer]);
   return (
     <ImageBackground
       source={require('../assets/images/background.jpeg')}
@@ -450,16 +182,36 @@ useEffect(() => {
         onPress={async () => {
           try {
             setCanResend(false);
-            setResendTimer(20);
-            setOtp("");
-            setOtpError("");
+setResendTimer(20);
+setOtp("");
+setOtpError("");
 
-            const response = await sendOtp(mobile);
+if (forgotPassword) {
 
-            if (response.existingUser) {
-              setLoginMode("password");
-              return;
-            }
+  const response = await sendForgotPasswordOtp(mobile);
+
+  if (!response.success) {
+    Alert.alert(
+      "Forgot Password",
+      response.message || "Failed to resend OTP."
+    );
+
+    setCanResend(true);
+    setResendTimer(0);
+
+    return;
+  }
+
+} else {
+
+  const response = await sendOtp(mobile);
+
+  if (response.existingUser) {
+    setLoginMode("password");
+    return;
+  }
+
+}
 
             
           } catch (err: any) {
@@ -514,12 +266,15 @@ useEffect(() => {
 {loginMode === "password" && (
   <TouchableOpacity
     onPress={() => {
-      setForgotPassword(true);
-      setOtp("");
-      setOtpError("");
-      setLoginMode("mobile");
-      setMobile("");
-    }}
+  setForgotPassword(true);
+  setOtp("");
+  setOtpError("");
+  setOtpSent(false);
+  setResendTimer(20);
+  setCanResend(false);
+  setLoginMode("mobile");
+  setMobile("");
+}}
   >
     <Text style={styles.forgotPasswordText}>
       Forgot Password?
@@ -533,23 +288,7 @@ useEffect(() => {
 
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={handleLogin}
-          >
-
-            <Text style={styles.loginButtonText}>
-
-              {
-                loginMode === 'mobile'
-                  ? 'NEXT'
-                  : loginMode === 'otp'
-                  ? 'VERIFY OTP'
-                  : 'LOGIN'
-              }
-
-            </Text>
-
-           style={styles.loginButton}
-         onPress={async () => {
+            onPress={async () => {
   try {
 
     // STEP 1 - Enter Mobile
@@ -584,8 +323,11 @@ useEffect(() => {
     }
 
     setOtp("");
-    setOtpError("");
-    setLoginMode("otp");
+setOtpError("");
+setOtpSent(true);
+setResendTimer(20);
+setCanResend(false);
+setLoginMode("otp");
 
     return;
   }
@@ -634,10 +376,12 @@ useEffect(() => {
       {
         text: "OK",
         onPress: () => {
-          setForgotPassword(false);
-          setOtp("");
-          setLoginMode("password");
-        },
+  setForgotPassword(false);
+  setOtp("");
+  setOtpSent(false);
+  setOtpError("");
+  setLoginMode("password");
+},
       },
     ]
   );
@@ -667,6 +411,20 @@ if (response.user.role === "VENDOR") {
     routes: [
       {
         name: "VendorDashboard" as never,
+      },
+    ],
+  });
+
+  return;
+}
+// Reseller Login
+if (response.user.role === "RESELLER") {
+
+  navigation.reset({
+    index: 0,
+    routes: [
+      {
+        name: "ResellerDashboard" as never,
       },
     ],
   });
@@ -727,6 +485,20 @@ if (response.user.role === "VENDOR") {
 
   return;
 }
+// Reseller Login
+if (response.user.role === "RESELLER") {
+
+  navigation.reset({
+    index: 0,
+    routes: [
+      {
+        name: "ResellerDashboard" as never,
+      },
+    ],
+  });
+
+  return;
+}
 
 // Customer Login
 if (route.params?.fromCart) {
@@ -752,20 +524,19 @@ if (route.params?.fromCart) {
       "Error",
       err?.response?.data?.message || "Something went wrong"
     );
-
   }
-}}
            
-          >
-          <Text style={styles.loginButtonText}>
-            {
-  loginMode === "mobile"
-    ? "NEXT"
-    : loginMode === "otp"
-    ? "VERIFY OTP"
-    : "LOGIN"
-}
-          </Text>
+  }}
+>
+            <Text style={styles.loginButtonText}>
+              {
+                loginMode === 'mobile'
+                  ? 'NEXT'
+                  : loginMode === 'otp'
+                  ? 'VERIFY OTP'
+                  : 'LOGIN'
+              }
+            </Text>
           </TouchableOpacity>
 
           {/* ======================================
@@ -779,13 +550,17 @@ if (route.params?.fromCart) {
               <TouchableOpacity
                 onPress={() => {
 
-                  setMobile('');
-                  setOtp('');
-                  setOtpSent(false);
-                  setOtpError('');
-                  setLoginMode('mobile');
+  setMobile('');
+  setOtp('');
+  setPassword('');
+  setOtpSent(false);
+  setOtpError('');
+  setForgotPassword(false);
+  setResendTimer(20);
+  setCanResend(false);
+  setLoginMode('mobile');
 
-                }}
+}}
               >
 
                 <View

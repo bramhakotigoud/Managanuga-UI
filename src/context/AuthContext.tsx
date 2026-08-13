@@ -92,6 +92,8 @@ export const AuthProvider = ({ children }: any) => {
 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const isVendor = user?.role === "VENDOR";
+const isReseller = user?.role === "RESELLER";
 
   useEffect(() => {
     checkLogin();
