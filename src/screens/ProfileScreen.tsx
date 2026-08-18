@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
+import { updateUsername } from '../services/authService';
 import {
   View,
   Text,
@@ -9,10 +10,79 @@ import {
   Share,
   Image,
   ScrollView,
+  TextInput,
+  Alert,
 } from 'react-native';
 
 export default function ProfileScreen({ navigation }: any) {
-  const { isLoggedIn, user, logout } = useAuth();
+  const { isLoggedIn, user, logout, updateUser } = useAuth();
+   const [showNamePopup, setShowNamePopup] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  useEffect(() => {
+  if (isLoggedIn && user?.requiresName === true) {
+    setShowNamePopup(true);
+  }
+}, [isLoggedIn, user]);
+
+const handleSaveName = async () => {
+  const cleanName = nameInput.trim();
+
+  if (!cleanName) {
+    Alert.alert('Name Required', 'Please enter your name.');
+    return;
+  }
+
+  if (!user?.id) {
+    Alert.alert('Error', 'User information is missing.');
+    return;
+  }
+
+  try {
+    setSavingName(true);
+
+    const response = await updateUsername(
+      user.id,
+      cleanName
+    );
+
+    console.log('SAVE NAME RESPONSE:', response);
+
+    if (!response.success) {
+      const msg = response.message || `Failed to save your name (status ${response.status}).`;
+      console.error('SAVE NAME FAILED:', response);
+      Alert.alert('Error', msg);
+      return;
+    }
+
+    // Update the logged-in user locally
+    // so Profile immediately displays the new name.
+    const updatedUser = {
+      ...user,
+      username: cleanName,
+      requiresName: false,
+    };
+    await updateUser(updatedUser);
+    setShowNamePopup(false);
+    setNameInput('');
+
+    Alert.alert(
+      'Welcome!',
+      `Nice to meet you, ${cleanName}.`
+    );
+
+    // We will update AuthContext with this user
+  } catch (error) {
+    console.error('SAVE NAME ERROR:', error);
+
+    Alert.alert(
+      'Error',
+      'Unable to save your name. Please try again.'
+    );
+  } finally {
+    setSavingName(false);
+  }
+};
 
   // 🎁 Share Referral Handler
   const handleShareReferral = async () => {
@@ -91,6 +161,7 @@ export default function ProfileScreen({ navigation }: any) {
 
   // 2. LOGGED-IN USER VIEW
   return (
+    <>
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
@@ -159,11 +230,16 @@ export default function ProfileScreen({ navigation }: any) {
           <Text style={styles.menuText}>My Addresses</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('Subscription')}>
-          <Text style={styles.menuText}>Subscription</Text>
-        </TouchableOpacity>
+        {user &&
+  !['9347499591', '9494661235', '9848283838'].includes(
+    String(user.mobile).replace(/\D/g, '')
+  ) && (
+    <TouchableOpacity
+      style={styles.menuItem}
+      onPress={() => navigation.navigate('Subscription')}>
+      <Text style={styles.menuText}>Subscription</Text>
+    </TouchableOpacity>
+  )}
 
         <TouchableOpacity
           style={styles.menuItem}
@@ -187,9 +263,44 @@ export default function ProfileScreen({ navigation }: any) {
         <TouchableOpacity style={styles.button} onPress={logout}>
           <Text style={styles.buttonText}>Logout</Text>
         </TouchableOpacity>
-      </ScrollView>
+           </ScrollView>
     </SafeAreaView>
-  );
+
+    {showNamePopup && (
+      <View style={styles.popupOverlay}>
+        <View style={styles.popupContainer}>
+          <Text style={styles.popupTitle}>
+            Welcome to Mana Ganuga!
+          </Text>
+
+          <Text style={styles.popupSubtitle}>
+            Please enter your name
+          </Text>
+
+          <TextInput
+            style={styles.nameInput}
+            placeholder="Enter your name"
+            placeholderTextColor="#999"
+            value={nameInput}
+            onChangeText={setNameInput}
+            autoFocus
+          />
+
+          <TouchableOpacity
+            style={styles.saveNameButton}
+            onPress={handleSaveName}
+            disabled={savingName}
+          >
+            <Text style={styles.saveNameButtonText}>
+              {savingName ? 'Saving...' : 'OK'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    )}
+
+  </>
+);
 }
 
 const styles = StyleSheet.create({
@@ -365,4 +476,70 @@ const styles = StyleSheet.create({
   height: 22,
   resizeMode: 'contain',
 },
+  popupOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 25,
+  },
+
+  popupContainer: {
+    width: '100%',
+    backgroundColor: '#FFF',
+    borderRadius: 20,
+    padding: 25,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+  },
+
+  popupTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#2D341F',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+
+  popupSubtitle: {
+    fontSize: 15,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+
+  nameInput: {
+    borderWidth: 1,
+    borderColor: '#DDD',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+    fontSize: 16,
+    color: '#2D341F',
+    backgroundColor: '#FAFAFA',
+    marginBottom: 15,
+  },
+
+  saveNameButton: {
+    backgroundColor: '#A84B21',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+
+  saveNameButtonText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });

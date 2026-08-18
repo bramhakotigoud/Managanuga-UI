@@ -102,8 +102,13 @@ export default function BottomTabs() {
           ),
         })}
       />
+      {/* ORDERS */}
+      <Tab.Screen
+        name="Orders"
+        component={OrdersScreen}
+      />
 
-      {/* PROFILE */}
+         {/* PROFILE */}
       <Tab.Screen
         name="Profile"
         component={
@@ -111,12 +116,6 @@ export default function BottomTabs() {
             ? ProfileScreen
             : LoginScreen
         }
-      />
-
-      {/* ORDERS */}
-      <Tab.Screen
-        name="Orders"
-        component={OrdersScreen}
       />
 
     </Tab.Navigator>

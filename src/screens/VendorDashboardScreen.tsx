@@ -40,6 +40,15 @@ export default function VendorDashboardScreen() {
         </View>
 
         <View style={styles.headerRight}>
+
+            {/* Wallet Button */}
+  <TouchableOpacity
+  style={styles.walletBtn}
+  onPress={() => navigation.navigate("VendorWallet")}
+>
+    <Text style={styles.walletIcon}>💰</Text>
+    <Text style={styles.walletText}>Wallet</Text>
+  </TouchableOpacity>
           {/* Notification Bell */}
           <TouchableOpacity style={styles.notificationBtn}>
             <Text style={{ fontSize: 22 }}>🔔</Text>
@@ -245,6 +254,37 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  walletBtn: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  height: 26,
+  paddingHorizontal: 6,
+  borderWidth: 2,
+  borderColor: "#C8A227",
+  borderRadius: 20,
+  backgroundColor: "#FFFDF7",
+  marginRight: 10,
+  shadowColor: "#C8A227",
+  shadowOffset: {
+    width: 0,
+    height: 1,
+  },
+  shadowOpacity: 0.25,
+  shadowRadius: 3,
+  elevation: 2,
+},
+
+walletIcon: {
+  fontSize: 13,
+  marginRight: 5,
+},
+
+walletText: {
+  color: "#A88416",
+  fontSize: 13,
+  fontWeight: "700",
+},
   notificationBtn: {
     marginRight: 12,
     position: "relative",

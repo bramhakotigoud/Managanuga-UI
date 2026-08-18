@@ -55,6 +55,7 @@ export const HeaderCartButton = () => {
 const HomeScreen = () => {
   const navigation = useNavigation();
   const {user} = useAuth();
+  const hideMembership = String(user?.mobile_no) === '9347499591';
   const [unreadNotificationCount, setUnreadNotificationCount] =
   useState(0);
   const [defaultAddress, setDefaultAddress] = useState<any>(null);
@@ -180,13 +181,19 @@ useFocusEffect(
         </View>
 
         <View style={styles.headerIcons}>
-          <TouchableOpacity
-  onPress={() => navigation.navigate('Subscription' as never)}>
-  <Image
-    source={require('../assets/images/membership_wallet.png')}
-    style={styles.membershipIcon}
-  />
-</TouchableOpacity>
+     {user &&
+  !['9347499591', '9494661235', '9848283838'].includes(
+    String(user.mobile).replace(/\D/g, '')
+  ) && (
+    <TouchableOpacity
+      onPress={() => navigation.navigate('Subscription' as never)}
+    >
+      <Image
+        source={require('../assets/images/membership_wallet.png')}
+        style={styles.membershipIcon}
+      />
+    </TouchableOpacity>
+  )}
 
          <TouchableOpacity
   onPress={() => navigation.navigate('Notifications' as never)}
@@ -219,14 +226,12 @@ useFocusEffect(
 
         {/* Search */}
         <View style={styles.searchContainer}>
-  <Search
-    size={20}
-    color="#777"
-    strokeWidth={2}
-  />
+ 
+
+  <Text style={styles.searchEmoji}>🔎</Text>
 
   <TextInput
-    placeholder="Search oils"
+    placeholder="Search Products"
     placeholderTextColor="#777"
     style={styles.searchInput}
   />
@@ -238,35 +243,59 @@ useFocusEffect(
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.topCategoryContainer}>
+
           <TouchableOpacity style={styles.topCategoryItem}>
             <Text style={styles.topCategoryIcon}>🛍️</Text>
             <Text style={styles.activeCategoryText}>For You</Text>
             <View style={styles.activeCategoryLine} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.topCategoryItem}>
+
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Sunflower' } as never)
+            }>
             <Text style={styles.topCategoryIcon}>🔥</Text>
             <Text style={styles.categoryLabel}>Trending</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.topCategoryItem}>
+
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Groundnut' } as never)
+            }>
             <Text style={styles.topCategoryIcon}>⭐</Text>
             <Text style={styles.categoryLabel}>Best Sellers</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.topCategoryItem}>
+
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Coconut' } as never)
+            }>
             <Text style={styles.topCategoryIcon}>🆕</Text>
             <Text style={styles.categoryLabel}>New Arrivals</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.topCategoryItem}>
+
+          <TouchableOpacity
+            style={styles.category}
+            onPress={() =>
+              navigation.navigate('Products' as never, { category: 'Sesame' } as never)
+            }>
             <Text style={styles.topCategoryIcon}>💎</Text>
             <Text style={styles.categoryLabel}>Premium</Text>
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.topCategoryItem}>
             <Text style={styles.topCategoryIcon}>🎁</Text>
             <Text style={styles.categoryLabel}>Combo</Text>
           </TouchableOpacity>
+
           <TouchableOpacity style={styles.topCategoryItem}>
             <Text style={styles.topCategoryIcon}>☰</Text>
             <Text style={styles.categoryLabel}>More</Text>
           </TouchableOpacity>
+
         </ScrollView>
 
         {/* BANNER CAROUSEL (RESPONSIVE & CLEAN SINGLE SNAP) */}
@@ -528,7 +557,7 @@ const styles = StyleSheet.create({
     color: '#222',
   },
   searchEmoji: {
-    fontSize: 18,
+    fontSize: 14,
   },
   heroBanner: {
     width: BANNER_WIDTH,

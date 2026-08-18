@@ -18,6 +18,7 @@ import SubscriptionScreen from '../screens/SubscriptionScreen';
 import AdminDashboard from '../screens/AdminDashboard';
 import OrderDetailsScreen from '../screens/OrdersDetailsScreen';
 import VendorDashboardScreen from "../screens/VendorDashboardScreen";
+import VendorWalletScreen from "../screens/VendorWalletScreen";
 import ResellerDashboardScreen from "../screens/ResellerDashboardScreen";
 import { LinkingOptions } from "@react-navigation/native";
 import LocationPickerScreen from "../screens/LocationPickerScreen";
@@ -117,6 +118,10 @@ export default function AppNavigator() {
           component={VendorDashboardScreen}
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+  name="VendorWallet"
+  component={VendorWalletScreen}
+/>
         <Stack.Screen
   name="ResellerDashboard"
   component={ResellerDashboardScreen}

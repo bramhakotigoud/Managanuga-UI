@@ -3,6 +3,21 @@ import Config from "react-native-config";
 const BASE_URL = Config.API_BASE_URL;
 console.log("BASE_URL:", Config.API_BASE_URL);
 
+const parseResponse = async (response: any) => {
+  const contentType = response.headers?.get?.("content-type") || "";
+  if (contentType.includes("application/json")) {
+    return await response.json();
+  }
+
+  // Fallback: try to parse text as JSON, otherwise return raw text with status
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    return { raw: text, status: response.status, ok: response.ok };
+  }
+};
+
 
 export const sendOtp = async (mobile: string) => {
   const response = await fetch(`${BASE_URL}/auth/send-otp`, {
@@ -13,7 +28,7 @@ export const sendOtp = async (mobile: string) => {
     body: JSON.stringify({ mobile }),
   });
 
-  return await response.json();
+  return await parseResponse(response);
 };
 
 export const verifyOtp = async (
@@ -32,7 +47,7 @@ export const verifyOtp = async (
       vendorId,
     }),
   });
-  return await response.json();
+  return await parseResponse(response);
 };
 export const loginWithPassword = async (
   mobile: string,
@@ -50,8 +65,7 @@ export const loginWithPassword = async (
     }),
   });
 
-  const data = await response.json();
-
+  const data = await parseResponse(response);
   if (!response.ok) {
     return data;
   }
@@ -72,7 +86,7 @@ export const sendForgotPasswordOtp = async (
     }
   );
 
-  return await response.json();
+  return await parseResponse(response);
 };
 
 export const resetPasswordWithOtp = async (
@@ -93,5 +107,46 @@ export const resetPasswordWithOtp = async (
     }
   );
 
-  return await response.json();
+  return await parseResponse(response);
+};
+export const updateUsername = async (
+  userId: number,
+  username: string
+) => {
+  const response = await fetch(
+    `${BASE_URL}/auth/update-name`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        username,
+      }),
+    }
+  );
+
+  // Try to parse JSON; fall back to text. Return a normalized shape
+  const contentType = response.headers?.get?.("content-type") || "";
+  let parsed: any = null;
+  if (contentType.includes("application/json")) {
+    try {
+      parsed = await response.json();
+    } catch (e) {
+      parsed = null;
+    }
+  } else {
+    const text = await response.text();
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      parsed = { raw: text };
+    }
+  }
+
+  const success = response.ok && (parsed?.success ?? true);
+  const message = parsed?.message || parsed?.error || (parsed?.raw ? parsed.raw : undefined);
+
+  return { success, message, data: parsed, status: response.status };
 };

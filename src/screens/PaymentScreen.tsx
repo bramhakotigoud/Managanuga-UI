@@ -40,9 +40,9 @@ const productAmount = buyNow
   : getCartTotal();
 
 const totalAmount = isMembership
-  ? 1
+  ? Number(membershipPlan?.price || 0)
   : productAmount;
-
+  
  console.log("buyNow =", buyNow);
  console.log("product =", product);
  console.log("product.price =", product?.price);
@@ -78,13 +78,9 @@ const [payableAmount, setPayableAmount] =
       response.membershipBenefits
     );
 
-    if (isMembership) {
-  setPayableAmount(1);
-} else {
-  setPayableAmount(
-    response.membershipBenefits.payableAmount
-  );
-}
+ setPayableAmount(
+  response.membershipBenefits.payableAmount
+);
 
   } catch (e) {
 

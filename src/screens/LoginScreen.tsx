@@ -401,7 +401,10 @@ if (!response.token) {
 setOtpError("");
 
 // Login successful
-login(response.token, response.user);
+login(response.token, {
+  ...response.user,
+  requiresName: response.requiresName === true,
+});
 
 // Vendor Login
 if (response.user.role === "VENDOR") {
