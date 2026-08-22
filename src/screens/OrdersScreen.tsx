@@ -13,6 +13,12 @@ import {
   StyleSheet,
   StatusBar,
 } from "react-native";
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+  Search,
+} from 'lucide-react-native';
 
 import { useCart } from "../context/CartContext";
 import { getOrders } from "../services/orderService";
@@ -126,6 +132,16 @@ export default function OrdersScreen({
 
       {/* FIXED BRAND HEADER (NO BACK BUTTON) */}
       <View style={styles.header}>
+        <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <CircleChevronLeft 
+                      size={24}
+                      color="#000000"
+                      strokeWidth={2}
+                      />
+                </TouchableOpacity>
+        
         <View style={styles.logoSection}>
           <Image
             source={require("../assets/images/logo.png")}
@@ -141,13 +157,21 @@ export default function OrdersScreen({
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => navigation.navigate("Notifications")}>
-            <Text style={styles.headerIconText}>🔔</Text>
+             <Bell
+              size={24}
+              color="#000000"
+              strokeWidth={2}
+              />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.cartIconWrapper}
             onPress={() => navigation.navigate("Cart")}>
-            <Text style={styles.headerIconText}>🛒</Text>
+            <ShoppingCart
+              size={24}
+              color="#0c0502"
+              strokeWidth={2}
+               />
             {Boolean(cartCount) && cartCount > 0 ? (
               <View style={styles.badgeContainer}>
                 <Text style={styles.badgeText}>

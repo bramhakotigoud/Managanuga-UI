@@ -88,10 +88,11 @@ export const sendForgotPasswordOtp = async (
 
   return await parseResponse(response);
 };
-
 export const resetPasswordWithOtp = async (
   mobile: string,
-  otp: string
+  otp: string,
+  newPassword: string,
+  confirmPassword: string
 ) => {
   const response = await fetch(
     `${BASE_URL}/auth/forgot-password/reset`,
@@ -103,6 +104,8 @@ export const resetPasswordWithOtp = async (
       body: JSON.stringify({
         mobile,
         otp,
+        newPassword,
+        confirmPassword,
       }),
     }
   );
@@ -150,3 +153,47 @@ export const updateUsername = async (
 
   return { success, message, data: parsed, status: response.status };
 };
+export const verifyForgotPasswordOtp = async (
+  mobile: string,
+  otp: string
+) => {
+  const response = await fetch(
+    `${BASE_URL}/auth/forgot-password/verify-otp`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        mobile,
+        otp,
+      }),
+    }
+  );
+
+  return await parseResponse(response);
+};
+export const changePassword = async (
+  userId: number,
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) => {
+  const response = await fetch(
+    `${BASE_URL}/auth/change-password`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        userId,
+        currentPassword,
+        newPassword,
+        confirmPassword,
+      }),
+    }
+  );
+
+  return await parseResponse(response);
+};    

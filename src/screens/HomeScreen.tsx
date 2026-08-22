@@ -12,7 +12,6 @@ import {
   Share,
   Animated,
 } from 'react-native';
-import { Search } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -22,6 +21,17 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import { getUnreadCount } from '../services/notificationService';
 // Get screen width dynamically (Subtract 30 to account for container padding: 15 left + 15 right)
+import {
+  Bell,
+  ShoppingCart,
+  Search,
+  FlaskConicalOff,
+  Truck,
+  Leaf,
+  PackageSearch,
+  Sprout,
+} from 'lucide-react-native';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const BANNER_WIDTH = SCREEN_WIDTH - 30;
 
@@ -39,7 +49,11 @@ export const HeaderCartButton = () => {
     <TouchableOpacity
       style={styles.cartIconContainer}
       onPress={() => navigation.navigate('Cart' as never)}>
-      <Text style={styles.icon}>🛒</Text>
+      <ShoppingCart
+  size={24}
+  color="rgb(0, 0, 0)"
+  strokeWidth={2}
+/>
       {cartCount > 0 && (
         <View style={styles.cartBadge}>
           <Text style={styles.cartBadgeText}>
@@ -199,8 +213,11 @@ useFocusEffect(
   onPress={() => navigation.navigate('Notifications' as never)}
   style={styles.notificationButton}>
   
-  <Text style={styles.icon}>🔔</Text>
-
+  <Bell
+  size={24}
+  color="#000000"
+  strokeWidth={2}
+/>
   {unreadNotificationCount > 0 && (
     <View style={styles.notificationBadge}>
       <Text style={styles.notificationBadgeText}>
@@ -226,17 +243,16 @@ useFocusEffect(
 
         {/* Search */}
         <View style={styles.searchContainer}>
- 
-
-  <Text style={styles.searchEmoji}>🔎</Text>
-
   <TextInput
     placeholder="Search Products"
     placeholderTextColor="#777"
     style={styles.searchInput}
   />
-
-  <Text style={styles.searchEmoji}>🛒</Text>
+  <PackageSearch
+  size={26}
+  color="#000000"
+  strokeWidth={2}
+ />
 </View>
 
         <ScrollView
@@ -422,7 +438,10 @@ useFocusEffect(
 
         <View style={styles.featuresGrid}>
           <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>🌿</Text>
+             <Leaf
+               size={22}
+               color="#130a05"
+               strokeWidth={2}/>
             <Text style={styles.featureTitle}>100% Natural</Text>
             <Text style={styles.featureDesc}>
               No artificial additives, 100% pure
@@ -430,7 +449,12 @@ useFocusEffect(
           </View>
 
           <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>🪵</Text>
+            <View style={{ marginBottom: 8, alignItems: 'center' }}>
+            </View>
+             <Sprout
+               size={22}
+               color="#130a05"
+               strokeWidth={2}/>
             <Text style={styles.featureTitle}>Wood Pressed</Text>
             <Text style={styles.featureDesc}>
               Traditional wooden cold-press method
@@ -438,7 +462,11 @@ useFocusEffect(
           </View>
 
           <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>🧪</Text>
+            <FlaskConicalOff
+              size={24}
+              color="#1a0c05"
+              strokeWidth={2}
+               />
             <Text style={styles.featureTitle}>Chemical Free</Text>
             <Text style={styles.featureDesc}>
               No chemicals or refined processing
@@ -446,7 +474,11 @@ useFocusEffect(
           </View>
 
           <View style={styles.featureCard}>
-            <Text style={styles.featureIcon}>🚚</Text>
+            <Truck
+                size={22}
+                color="#130a05"
+                strokeWidth={2}
+              />
             <Text style={styles.featureTitle}>Free Delivery</Text>
             <Text style={styles.featureDesc}>
               Safe and fast delivery at your doorstep

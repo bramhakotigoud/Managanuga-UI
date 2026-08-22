@@ -9,6 +9,12 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+  Search,
+} from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
 import { HeaderCartButton } from './HomeScreen';
@@ -87,6 +93,16 @@ const ProductsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <CircleChevronLeft 
+                size={24}
+          color="#000000"
+          strokeWidth={2}
+          />
+        
+              </TouchableOpacity>
         <View style={styles.logoSection}>
           <Image
             source={require('../assets/images/logo.png')}
@@ -101,7 +117,11 @@ const ProductsScreen = () => {
         <View style={styles.headerIcons}>
           <TouchableOpacity
             onPress={() => navigation.navigate('Notifications')}>
-            <Text style={styles.icon}>🔔</Text>
+                 <Bell
+              size={24}
+              color="#000000"
+              strokeWidth={2}
+            />
           </TouchableOpacity>
           <HeaderCartButton />
         </View>
@@ -109,7 +129,7 @@ const ProductsScreen = () => {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.searchContainer}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          
           <TextInput
             placeholder="Search products..."
             placeholderTextColor="#888"
@@ -117,6 +137,11 @@ const ProductsScreen = () => {
             onChangeText={setSearch}
             style={styles.searchInput}
           />
+          <Search
+            size={22}
+            color="#000000"
+            strokeWidth={2}
+           />
         </View>
 
         <ScrollView

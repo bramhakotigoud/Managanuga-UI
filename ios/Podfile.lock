@@ -57,6 +57,7 @@ PODS:
   - GoogleMaps (9.4.0):
     - GoogleMaps/Maps (= 9.4.0)
   - GoogleMaps/Maps (9.4.0)
+  - GooglePlaces (7.3.0)
   - GoogleUtilities/AppDelegateSwizzler (8.1.2):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -116,6 +117,7 @@ PODS:
     - React-RCTText (= 0.86.0)
     - React-RCTVibration (= 0.86.0)
   - React-callinvoker (0.86.0)
+  - React-Codegen (0.1.0)
   - React-Core (0.86.0):
     - hermes-engine
     - RCTDeprecation
@@ -1542,6 +1544,17 @@ PODS:
     - Yoga
   - react-native-geolocation-service (5.3.1):
     - React
+  - react-native-google-places-sdk (0.4.0):
+    - GooglePlaces (= 7.3.0)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - React-Fabric
+    - React-graphics
+    - React-RCTFabric
+    - React-utils
+    - ReactCommon/turbomodule/core
   - react-native-maps (1.29.0):
     - react-native-maps/Maps (= 1.29.0)
   - react-native-maps/Generated (1.29.0):
@@ -2344,6 +2357,51 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - RNSVG (15.15.5):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - RNSVG/common (= 15.15.5)
+    - Yoga
+  - RNSVG/common (15.15.5):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNVectorIcons (10.3.0):
     - hermes-engine
     - RCTRequired
@@ -2485,6 +2543,7 @@ DEPENDENCIES:
   - React-mutationobservernativemodule (from `../node_modules/react-native/ReactCommon/react/nativemodule/mutationobserver`)
   - react-native-config (from `../node_modules/react-native-config`)
   - react-native-geolocation-service (from `../node_modules/react-native-geolocation-service`)
+  - react-native-google-places-sdk (from `../node_modules/react-native-google-places-sdk`)
   - react-native-maps (from `../node_modules/react-native-maps`)
   - react-native-razorpay (from `../node_modules/react-native-razorpay`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
@@ -2532,6 +2591,7 @@ DEPENDENCIES:
   - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNReanimated (from `../node_modules/react-native-reanimated`)
   - RNScreens (from `../node_modules/react-native-screens`)
+  - RNSVG (from `../node_modules/react-native-svg`)
   - RNVectorIcons (from `../node_modules/react-native-vector-icons`)
   - RNWorklets (from `../node_modules/react-native-worklets`)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -2546,11 +2606,13 @@ SPEC REPOS:
     - FirebaseMessaging
     - GoogleDataTransport
     - GoogleMaps
+    - GooglePlaces
     - GoogleUtilities
     - nanopb
     - PromisesObjC
     - razorpay-core-pod
     - razorpay-pod
+    - React-Codegen
 
 EXTERNAL SOURCES:
   AsyncStorage:
@@ -2640,6 +2702,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-config"
   react-native-geolocation-service:
     :path: "../node_modules/react-native-geolocation-service"
+  react-native-google-places-sdk:
+    :path: "../node_modules/react-native-google-places-sdk"
   react-native-maps:
     :path: "../node_modules/react-native-maps"
   react-native-razorpay:
@@ -2734,6 +2798,8 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native-reanimated"
   RNScreens:
     :path: "../node_modules/react-native-screens"
+  RNSVG:
+    :path: "../node_modules/react-native-svg"
   RNVectorIcons:
     :path: "../node_modules/react-native-vector-icons"
   RNWorklets:
@@ -2753,8 +2819,9 @@ SPEC CHECKSUMS:
   FirebaseMessaging: 313d69fe6529c8846813d1660b65d7d38bc16954
   GoogleDataTransport: a24e58982ab3ba2f64d79613e027fe7f57e88539
   GoogleMaps: 0608099d4870cac8754bdba9b6953db543432438
+  GooglePlaces: 0609463845250bbadafa1739938181e54dece439
   GoogleUtilities: 766ace00c6b10d8148408f329d10c4f051931850
-  hermes-engine: 87acd6d9507ff881689f8e067fa7d0f2488017cc
+  hermes-engine: 1940eec0d8573da55b28d61ab3234712661f4e7c
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   razorpay-core-pod: c7f3ac3d214c1a7fac4e9a59c1de7eac02130573
@@ -2766,6 +2833,7 @@ SPEC CHECKSUMS:
   RCTTypeSafety: 3eaed17dbddb0b989208b062ea14c44d412b9780
   React: 2574546f2d017abd14d0c9b48cf2b6a0547c2591
   React-callinvoker: 03cd4b931d1d583d87aae99b8f7b6fe26bf571ee
+  React-Codegen: 4b8b4817cea7a54b83851d4c1f91f79aa73de30a
   React-Core: 1c824d9c7dd8aa760b5f1b50d5a54c2a3f598f87
   React-Core-prebuilt: 13924a267683b3d6fa4bde9c80380becf83a9c5c
   React-CoreModules: 2f9ed75bca7f6dea2b70e8a1f4a5ca9b6be52d76
@@ -2798,6 +2866,7 @@ SPEC CHECKSUMS:
   React-mutationobservernativemodule: f0a0d5ae9b51caf7becbeabf836d716cfedb6bf2
   react-native-config: 6188f674e4f4b3bdfd43c22886fb04f3103793ff
   react-native-geolocation-service: 32b2c2a3b91e70ce2a8d0c684801aaeb0a07e0ec
+  react-native-google-places-sdk: fe5223b4757945df21bd9b6540d94c510706d316
   react-native-maps: 7e3af023b773d6670e3c07e9c8170af842b243e0
   react-native-razorpay: e6ad1261209cdbac15dd3dab4db2a5f7461fd295
   react-native-safe-area-context: fb5c8ee9f6dd62ef710611b3d370c501f42a4ac0
@@ -2842,13 +2911,14 @@ SPEC CHECKSUMS:
   RNFBMessaging: 491e1e3c68a4486cba040f2e62ce29d1bed28e25
   RNGestureHandler: 1fac5cb6e78ca6836f4c0b9beba31b10490c70ce
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
-  RNPermissions: c598a5711a7a5ed8e800f60c8a869d0a316c2c0b
+  RNPermissions: 66f64f4ecb8b45e16caf8db15b79bf96b552790f
   RNReanimated: 230d297a3eebba7eb9fc7331afdcafb095373a4b
   RNScreens: 991cc417cd396602a6cf59a42139e5a9d91462a9
+  RNSVG: 6cae8d4082913be2eb43eaec2a456222c42195ed
   RNVectorIcons: 97f26211c07d69e45b189f9dd0dbbe5e2d2b0b92
   RNWorklets: 110467c6a831aed93c013a36d7fc37892881967b
   Yoga: fe50ab299e578f397fef753cf309c6703a4db29b
 
-PODFILE CHECKSUM: 4a61b7a67b24fa79739de3d98dc91715843cb137
+PODFILE CHECKSUM: 881d5e4483905a3e432e8b56cac2092033c5fb61
 
 COCOAPODS: 1.17.0

@@ -7,6 +7,7 @@ import {
   verifyOtp,
   loginWithPassword,
   sendForgotPasswordOtp,
+  verifyForgotPasswordOtp,
   resetPasswordWithOtp,
 } from '../services/authService';
 
@@ -34,6 +35,8 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [otpError, setOtpError] = useState('');
   const [forgotPassword, setForgotPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+const [confirmPassword, setConfirmPassword] = useState('');
   const [vendorId, setVendorId] = useState<string | null>(null);
 
   const [resendTimer, setResendTimer] = useState(20);
@@ -119,8 +122,9 @@ const LoginScreen = () => {
               MOBILE NUMBER
           ====================================== */}
 
-          <TextInput
-            placeholder="Mobile Number"
+          {loginMode !== 'resetPassword' && (
+  <TextInput
+    placeholder="Mobile Number"
             keyboardType="phone-pad"
             value={mobile}
             onChangeText={(text) => {
@@ -134,6 +138,7 @@ const LoginScreen = () => {
             placeholderTextColor="#888"
             style={styles.input}
           />
+          )}
 
           {/* ======================================
               OTP INPUT
@@ -237,6 +242,48 @@ if (forgotPassword) {
       </Text>
     )}
   </View>
+)}
+
+{/* ======================================
+    RESET PASSWORD INPUTS
+====================================== */}
+
+{loginMode === 'resetPassword' && (
+  <>
+    <TextInput
+      placeholder="New Password"
+      placeholderTextColor="#888"
+      value={newPassword}
+      onChangeText={(text) => {
+        setNewPassword(text);
+        setOtpError('');
+      }}
+      secureTextEntry={true}
+      autoCapitalize="none"
+      autoCorrect={false}
+      style={styles.input}
+    />
+
+    <TextInput
+      placeholder="Confirm Password"
+      placeholderTextColor="#888"
+      value={confirmPassword}
+      onChangeText={(text) => {
+        setConfirmPassword(text);
+        setOtpError('');
+      }}
+      secureTextEntry={true}
+      autoCapitalize="none"
+      autoCorrect={false}
+      style={styles.input}
+    />
+
+    {otpError !== '' && (
+      <Text style={styles.errorText}>
+        {otpError}
+      </Text>
+    )}
+  </>
 )}
 
           {/* ======================================
@@ -349,14 +396,13 @@ setLoginMode("otp");
     // STEP 2 - Verify OTP
     if (loginMode === "otp") {
       if (forgotPassword) {
-
-  const response = await resetPasswordWithOtp(
+  const response = await verifyForgotPasswordOtp(
     mobile,
     otp
   );
 
   console.log(
-    "🔐 RESET PASSWORD RESPONSE:",
+    "🔐 VERIFY FORGOT PASSWORD OTP RESPONSE:",
     response
   );
 
@@ -367,28 +413,15 @@ setLoginMode("otp");
     return;
   }
 
-  setOtpError("");
-
-  Alert.alert(
-    "Password Reset",
-    "Your password has been reset successfully. The new password has been sent to your mobile.",
-    [
-      {
-        text: "OK",
-        onPress: () => {
-  setForgotPassword(false);
-  setOtp("");
-  setOtpSent(false);
-  setOtpError("");
-  setLoginMode("password");
-},
-      },
-    ]
-  );
+  // OTP is verified.
+  // Now show the new password screen.
+  setOtpError('');
+  setNewPassword('');
+  setConfirmPassword('');
+  setLoginMode("resetPassword");
 
   return;
-} 
-
+}
       const response = await verifyOtp(mobile, otp,   vendorId);
 
 // Invalid OTP
@@ -453,7 +486,70 @@ if (route.params?.fromCart) {
 return;
     }
 
-   
+// STEP 3 - RESET PASSWORD
+if (loginMode === "resetPassword") {
+
+  if (!newPassword || !confirmPassword) {
+    setOtpError("Please enter your new password.");
+    return;
+  }
+
+  if (newPassword.length < 6) {
+    setOtpError(
+      "Password must be at least 6 characters."
+    );
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    setOtpError(
+      "Passwords do not match."
+    );
+    return;
+  }
+
+  const response = await resetPasswordWithOtp(
+    mobile,
+    otp,
+    newPassword,
+    confirmPassword
+  );
+
+  console.log(
+    "🔐 RESET PASSWORD RESPONSE:",
+    response
+  );
+
+  if (!response.success) {
+    setOtpError(
+      response.message || "Failed to reset password."
+    );
+    return;
+  }
+
+  setOtpError('');
+  setPassword('');
+  setNewPassword('');
+  setConfirmPassword('');
+  setOtp('');
+  setOtpSent(false);
+  setForgotPassword(false);
+
+  Alert.alert(
+    "Password Reset",
+    "Your password has been reset successfully. Please login with your new password.",
+    [
+      {
+        text: "OK",
+        onPress: () => {
+          setLoginMode("password");
+        },
+      },
+    ]
+  );
+
+  return;
+}  
    // STEP 3 - Login with Password
 if (loginMode === "password") {
 
@@ -533,11 +629,14 @@ if (route.params?.fromCart) {
 >
             <Text style={styles.loginButtonText}>
               {
-                loginMode === 'mobile'
-                  ? 'NEXT'
-                  : loginMode === 'otp'
-                  ? 'VERIFY OTP'
-                  : 'LOGIN'
+                
+                 loginMode === 'mobile'
+  ? 'NEXT'
+  : loginMode === 'otp'
+  ? 'VERIFY OTP'
+  : loginMode === 'resetPassword'
+  ? 'RESET PASSWORD'
+  : 'LOGIN'
               }
             </Text>
           </TouchableOpacity>

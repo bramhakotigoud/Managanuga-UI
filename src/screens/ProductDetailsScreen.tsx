@@ -10,6 +10,15 @@ import {
   TouchableOpacity,
   Image,
 } from 'react-native';
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+  Truck,
+  ShieldCheck,
+  Leaf,
+  Star,
+} from 'lucide-react-native';
 
 const ProductDetailsScreen = ({route}: any) => {
   const {addToCart, cartItems} = useCart();
@@ -42,10 +51,13 @@ const ProductDetailsScreen = ({route}: any) => {
       {/* --- TOP HEADER WITH BACK BUTTON, LOGO, BRAND NAME & ACTIONS --- */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
           onPress={() => navigation.goBack()}
           hitSlop={{top: 10, bottom: 10, left: 10, right: 10}}>
-          <Text style={styles.backIcon}>‹</Text>
+          <CircleChevronLeft 
+                  size={24}
+            color="#000000"
+            strokeWidth={2}
+            />
         </TouchableOpacity>
 
         <View style={styles.brandContainer}>
@@ -63,7 +75,11 @@ const ProductDetailsScreen = ({route}: any) => {
           <TouchableOpacity 
             style={styles.iconButton}
             onPress={() => navigation.navigate('Notifications')}>
-            <Text style={styles.headerIconText}>🔔</Text>
+                  <Bell
+              size={24}
+              color="#000000"
+              strokeWidth={2}
+            />
           </TouchableOpacity>
 
           {/* Cart Icon with Dynamic Badge */}
@@ -71,7 +87,11 @@ const ProductDetailsScreen = ({route}: any) => {
           <TouchableOpacity
             style={styles.cartIconWrapper}
             onPress={() => navigation.navigate('Cart')}>
-            <Text style={styles.headerIconText}>🛒</Text>
+            <ShoppingCart
+              size={24}
+              color="#0c0502"
+              strokeWidth={2}
+            />
             {Boolean(cartCount) && cartCount > 0 ? (
               <View style={styles.badgeContainer}>
                 <Text style={styles.badgeText}>
@@ -209,19 +229,31 @@ const ProductDetailsScreen = ({route}: any) => {
 
         <View style={styles.trustContainer}>
           <View style={styles.trustBox}>
-            <Text style={styles.trustIcon}>🚚</Text>
+            <Truck
+    size={22}
+    color="#130a05"
+    strokeWidth={2}
+  />
 
             <Text style={styles.trustText}>Fast Delivery</Text>
           </View>
 
           <View style={styles.trustBox}>
-            <Text style={styles.trustIcon}>🔒</Text>
+            <ShieldCheck
+             size={22}
+             color="#130a05"
+             strokeWidth={2}/>
+
 
             <Text style={styles.trustText}>Secure Payments</Text>
           </View>
 
           <View style={styles.trustBox}>
-            <Text style={styles.trustIcon}>🌿</Text>
+            <Leaf
+            size={22}
+             color="#130a05"
+             strokeWidth={2}/>
+
 
             <Text style={styles.trustText}>Pure & Natural</Text>
           </View>

@@ -22,6 +22,7 @@ import VendorWalletScreen from "../screens/VendorWalletScreen";
 import ResellerDashboardScreen from "../screens/ResellerDashboardScreen";
 import { LinkingOptions } from "@react-navigation/native";
 import LocationPickerScreen from "../screens/LocationPickerScreen";
+import LegalScreen from '../screens/LegalScreen';
 
 const Stack = createNativeStackNavigator();
 const linking: LinkingOptions<any> = {
@@ -82,6 +83,11 @@ export default function AppNavigator() {
           name="HelpSupport"
           component={HelpSupportScreen}
         />
+        <Stack.Screen
+  name="LegalScreen"
+  component={LegalScreen}
+  options={{headerShown: false}}
+/>
         <Stack.Screen
           name="AddAddress"
           component={AddAddressScreen}

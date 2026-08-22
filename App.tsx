@@ -14,6 +14,10 @@ import {
 import AppNavigator from './src/navigation/AppNavigator';
 import {CartProvider} from './src/context/CartContext';
 import Config from 'react-native-config';
+import GooglePlacesSDK from 'react-native-google-places-sdk';
+GooglePlacesSDK.initialize(
+  Config.GOOGLE_PLACES_API_KEY || '',
+);
 
 function NotificationSetup() {
   const {user} = useAuth();

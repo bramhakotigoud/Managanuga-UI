@@ -14,6 +14,15 @@ import {
   ActivityIndicator,
   StatusBar,
 } from "react-native";
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+  Search,
+  Truck,
+  MapPinHouse,
+  Summary,
+} from 'lucide-react-native';
 
 import { useCart } from "../context/CartContext";
 
@@ -158,10 +167,13 @@ export default function OrderDetailsScreen({
       {/* FIXED TOP HEADER WITH BACK BUTTON, LOGO, BELL & CART BADGE */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.backIcon}>‹</Text>
+          <CircleChevronLeft 
+            size={24}
+            color="#000000"
+            strokeWidth={2}
+            />
         </TouchableOpacity>
 
         <View style={styles.logoSection}>
@@ -180,13 +192,21 @@ export default function OrderDetailsScreen({
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => navigation.navigate("Notifications")}>
-            <Text style={styles.headerIconText}>🔔</Text>
+            <Bell
+             size={24}
+             color="#000000"
+             strokeWidth={2}
+              />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.cartIconWrapper}
             onPress={() => navigation.navigate("Cart")}>
-            <Text style={styles.headerIconText}>🛒</Text>
+            <ShoppingCart
+              size={24}
+              color="#0c0502"
+              strokeWidth={2}
+              />
             {Boolean(cartCount) && cartCount > 0 ? (
               <View style={styles.badgeContainer}>
                 <Text style={styles.badgeText}>
@@ -226,7 +246,7 @@ export default function OrderDetailsScreen({
 
         {/* PRODUCTS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🛒 Products</Text>
+          <Text style={styles.sectionTitle}>Products</Text>
 
           {items.map((item: any) => (
             <View key={item.id} style={styles.productCard}>
@@ -248,7 +268,17 @@ export default function OrderDetailsScreen({
 
         {/* ADDRESS */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📍 Delivery Address</Text>
+         <View style={styles.sectionTitleRow}>
+  <MapPinHouse
+    size={22}
+    color="#040201"
+    strokeWidth={2}
+  />
+
+  <Text style={styles.sectionTitle}>
+    Delivery Address
+  </Text>
+</View>
 
           <View style={styles.addressCard}>
             <Text style={styles.addressName}>Address will be available</Text>
@@ -258,7 +288,16 @@ export default function OrderDetailsScreen({
 
         {/* SHIPMENT */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>🚚 Shipment Tracking</Text>
+          <View style={styles.sectionTitleRow}>
+  <Truck
+    size={22}
+    color="#130a05"
+    strokeWidth={2}
+  />
+  <Text style={styles.sectionTitle}>
+    Shipment Tracking
+  </Text>
+</View>
 
           <View style={styles.trackingCard}>
             <View style={styles.trackingRow}>
@@ -301,7 +340,16 @@ export default function OrderDetailsScreen({
 
         {/* MERGED PAYMENT & ORDER SUMMARY CONTAINER */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📊 Order Summary</Text>
+          <View style={styles.sectionTitleRow}>
+  <Summary
+    size={22}
+    color="#000000"
+    strokeWidth={2}
+  />
+  <Text style={styles.sectionTitle}>
+    Order Summary
+  </Text>
+</View>
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Total Items</Text>
@@ -689,4 +737,17 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#D4A017",
   },
+sectionTitleRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 11,
+  marginTop: 15,
+  marginBottom: 10,
+},
+sectionTitle: {
+  fontSize: 18,
+  fontWeight: '700',
+  color: '#2D341F',
+  marginLeft: 0,
+},
 });
