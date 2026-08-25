@@ -281,9 +281,35 @@ export default function OrderDetailsScreen({
 </View>
 
           <View style={styles.addressCard}>
-            <Text style={styles.addressName}>Address will be available</Text>
-            <Text style={styles.addressText}>after address integration.</Text>
-          </View>
+  <Text style={styles.addressName}>
+    {order.full_name || "Address"}
+  </Text>
+
+  {!!order.phone && (
+    <Text style={styles.addressPhone}>
+      {order.phone}
+    </Text>
+  )}
+
+  <Text style={styles.addressText}>
+    {order.address_line1}
+    {order.address_line2
+      ? `, ${order.address_line2}`
+      : ""}
+    {order.city
+      ? `, ${order.city}`
+      : ""}
+    {order.state
+      ? `, ${order.state}`
+      : ""}
+    {order.postal_code
+      ? ` - ${order.postal_code}`
+      : ""}
+    {order.country
+      ? `, ${order.country}`
+      : ""}
+  </Text>
+</View>
         </View>
 
         {/* SHIPMENT */}
@@ -749,5 +775,11 @@ sectionTitle: {
   fontWeight: '700',
   color: '#2D341F',
   marginLeft: 0,
+},
+addressPhone: {
+  marginTop: 4,
+  fontSize: 14,
+  fontWeight: "600",
+  color: "#444",
 },
 });

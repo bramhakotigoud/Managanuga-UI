@@ -1,14 +1,12 @@
 import React from 'react';
 import {Image, Pressable, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-
 import HomeScreen from '../screens/HomeScreen';
 import ProductsScreen from '../screens/ProductsScreen';
 import OrdersScreen from '../screens/OrdersScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import Svg, {Path} from 'react-native-svg';
-
 import {useAuth} from '../context/AuthContext';
 import {
   House,
@@ -16,17 +14,18 @@ import {
   User,
   Milk,
 } from 'lucide-react-native';
-
+import {GifAnimationProvider, useGifAnimation} from '../context/GifAnimationContext';
 const Tab = createBottomTabNavigator();
 
-export default function BottomTabs() {
+function BottomTabsNavigator() {
   const {isLoggedIn} = useAuth();
+  const {gifPlaying} = useGifAnimation();
 
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#A84B21',
+        tabBarActiveTintColor: '#948635',
         tabBarInactiveTintColor: '#999',
 
         tabBarStyle: {
@@ -80,14 +79,23 @@ export default function BottomTabs() {
         },
 
         tabBarIcon: ({focused}) => {
-          const color = focused ? '#A84B21' : '#777';
+          const color = focused ? '#000000' : '#040101';
 
           if (route.name === 'Home') {
             return <House size={26} color={color} strokeWidth={2} />;
           }
           if (route.name === 'Products') {
-            return <Milk size={26} color={color} strokeWidth={2} />;
-          }
+  return (
+    <Image
+      source={require('../assets/images/ground.png')}
+      style={{
+        width: 30,
+        height: 30,
+      }}  
+      resizeMode="contain"
+    />
+  );
+}
           if (route.name === 'Orders') {
             return <ReceiptText size={26} color={color} strokeWidth={2} />;
           }
@@ -147,14 +155,19 @@ export default function BottomTabs() {
                   elevation: 4,
                 }}>
                 <Image
-                  source={require('../assets/gif/mana.gif')}
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: 26,
-                  }}
-                  resizeMode="cover"
-                />
+  key={gifPlaying ? 'mana-gif' : 'mana-static'}
+  source={
+    gifPlaying
+      ? require('../assets/gif/mana.gif')
+      : require('../assets/gif/mana-static.png')
+  }
+  style={{
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  }}
+  resizeMode="cover"
+/>
               </View>
             </Pressable>
           ),
@@ -174,5 +187,12 @@ export default function BottomTabs() {
       />
 
     </Tab.Navigator>
+  );
+}
+export default function BottomTabs() {
+  return (
+    <GifAnimationProvider>
+      <BottomTabsNavigator />
+    </GifAnimationProvider>
   );
 }

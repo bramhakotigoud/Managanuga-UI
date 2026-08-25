@@ -1,4 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '../context/AuthContext';
+import {
+  getAddresses,
+  updateAddress,
+  deleteAddress as deleteAddressApi,
+} from '../services/addressService';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import {
@@ -11,33 +16,43 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+} from 'lucide-react-native';
+
 
 export default function AddressListScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const { user } = useAuth();
 
   const [addresses, setAddresses] = useState<any[]>([]);
   const fromCheckout = route.params?.fromCheckout;
 
   // Data loading helper
   const loadAddresses = useCallback(async () => {
-    try {
-      const data = await AsyncStorage.getItem('addresses');
-      if (data) {
-        setAddresses(JSON.parse(data));
-      }
-    } catch (error) {
-      console.log('Error loading addresses:', error);
-    }
-  }, []);
+  if (!user?.id) {
+    return;
+  }
 
-  const saveAddresses = async (data: any[]) => {
-    try {
-      await AsyncStorage.setItem('addresses', JSON.stringify(data));
-    } catch (error) {
-      console.log('Error saving addresses:', error);
+  try {
+    const response = await getAddresses(Number(user.id));
+
+    if (response?.success) {
+      setAddresses(response.data || []);
+    } else {
+      setAddresses([]);
     }
-  };
+  } catch (error) {
+    console.log('Error loading addresses:', error);
+    Alert.alert(
+      'Error',
+      'Unable to load your addresses.'
+    );
+  }
+}, [user?.id]);
 
   // Safe focus listener
   useEffect(() => {
@@ -50,103 +65,91 @@ export default function AddressListScreen() {
     return unsubscribe;
   }, [navigation, loadAddresses]);
 
-  // Handle address saved/edited via route params if passed back
-  useEffect(() => {
-    const data = route.params?.newAddress;
-    const editIndex = route.params?.editIndex;
-
-    if (!data) return;
-
-    const constructed = [
-      data.houseNo,
-      data.street,
-      data.landmark,
-      data.city,
-      data.state,
-    ]
-      .filter(Boolean)
-      .join(', ');
-
-    const formattedAddress =
-      data.address ||
-      (constructed
-        ? `${constructed}${data.pincode ? ' - ' + data.pincode : ''}`
-        : '');
-
-    setAddresses((prev) => {
-      let updated: any[];
-
-      if (editIndex !== undefined && editIndex !== null) {
-        updated = prev.map((item, index) =>
-          index === editIndex
-            ? { ...data, address: formattedAddress }
-            : item
-        );
-      } else {
-        updated = [
-          ...prev,
-          {
-            ...data,
-            isDefault: prev.length === 0,
-            address: formattedAddress,
-          },
-        ];
-      }
-
-      saveAddresses(updated);
-      return updated;
-    });
-
-    navigation.setParams({ newAddress: undefined, editIndex: undefined });
-  }, [route.params?.newAddress, route.params?.editIndex]);
 
   const makeDefault = async (selectedIndex: number) => {
-    const updatedAddresses = addresses.map((item, index) => ({
-      ...item,
-      isDefault: index === selectedIndex,
-    }));
+  try {
+    const selected = addresses[selectedIndex];
 
-    setAddresses(updatedAddresses);
-    await saveAddresses(updatedAddresses);
+    if (!selected?.id) {
+      Alert.alert('Error', 'Address ID is missing.');
+      return;
+    }
+
+    await Promise.all(
+      addresses.map(async (item) => {
+        if (item.id) {
+          await updateAddress(item.id, {
+            is_default: item.id === selected.id,
+          });
+        }
+      })
+    );
+
+    await loadAddresses();
 
     if (fromCheckout) {
       navigation.goBack();
     }
-  };
+  } catch (error: any) {
+    console.log('MAKE DEFAULT ERROR:', error);
 
-  const deleteAddress = (indexToDelete: number) => {
     Alert.alert(
-      'Delete Address',
-      'Are you sure you want to delete this address?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            const updated = addresses.filter((_, index) => index !== indexToDelete);
+      'Error',
+      error?.message || 'Failed to update default address.'
+    );
+  }
+};
 
-            if (addresses[indexToDelete]?.isDefault && updated.length > 0) {
-              updated[0].isDefault = true;
+ const deleteAddress = (indexToDelete: number) => {
+  Alert.alert(
+    'Delete Address',
+    'Are you sure you want to delete this address?',
+    [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            const address = addresses[indexToDelete];
+
+            if (!address?.id) {
+              Alert.alert('Error', 'Address ID is missing.');
+              return;
             }
 
-            setAddresses(updated);
-            await saveAddresses(updated);
-          },
+            await deleteAddressApi(Number(address.id));
+
+            await loadAddresses();
+          } catch (error: any) {
+            console.log('DELETE ADDRESS ERROR:', error);
+
+            Alert.alert(
+              'Error',
+              error?.message || 'Failed to delete address.'
+            );
+          }
         },
-      ]
-    );
-  };
+      },
+    ]
+  );
+};
 
   return (
     <SafeAreaView style={styles.container}>
       {/* FIXED BRAND HEADER MATCHING AddAddressScreen */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.backIcon}>‹</Text>
+          <CircleChevronLeft 
+              size={24}
+              color="#000000"
+              strokeWidth={2}
+              />
         </TouchableOpacity>
 
         <View style={styles.brandContainer}>
@@ -170,31 +173,55 @@ export default function AddressListScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {addresses.map((item, index) => (
-          <View key={index} style={styles.card}>
+  <View key={item.id ?? index} style={styles.card}>
             <View style={styles.topRow}>
               <Text style={styles.homeTag}>
-                {item.addressType === 'Home' || item.type === 'Home'
-                  ? '🏠 Home'
-                  : item.addressType === 'Office' || item.type === 'Office'
-                  ? '🏢 Office'
-                  : '📍 Other'}
-              </Text>
-              {item.isDefault && (
+  {item.address_type === 'Home'
+    ? '🏠 Home'
+    : item.address_type === 'Office'
+    ? '🏢 Office'
+    : '📍 Other'}
+</Text>
+              {item.is_default && (
                 <Text style={styles.defaultTag}>✓ Default</Text>
               )}
             </View>
+            {!!item.full_name && (
+  <Text style={styles.name}>
+    {item.full_name}
+  </Text>
+)}
 
-            {!!item.name && <Text style={styles.name}>{item.name}</Text>}
-            {!!item.address && <Text style={styles.address}>{item.address}</Text>}
-            {!!item.mobile && <Text style={styles.mobile}>{item.mobile}</Text>}
+{!!item.address_line1 && (
+  <Text style={styles.address}>
+    {item.address_line1}
+    {item.address_line2
+      ? `, ${item.address_line2}`
+      : ''}
+    {item.city
+      ? `, ${item.city}`
+      : ''}
+    {item.state
+      ? `, ${item.state}`
+      : ''}
+    {item.postal_code
+      ? ` - ${item.postal_code}`
+      : ''}
+  </Text>
+)}
+
+{!!item.phone && (
+  <Text style={styles.mobile}>
+    {item.phone}
+  </Text>
+)}
 
             <View style={styles.cardActionsRow}>
               <TouchableOpacity
                 onPress={() =>
                   navigation.navigate('AddAddress', {
-                    editData: item,
-                    editIndex: index,
-                  })
+                  editData: item,
+                   })
                 }
               >
                 <Text style={styles.edit}>Edit</Text>
@@ -204,7 +231,7 @@ export default function AddressListScreen() {
                 <Text style={styles.delete}>Delete</Text>
               </TouchableOpacity>
 
-              {!item.isDefault && (
+              {!item.is_default && (
                 <TouchableOpacity onPress={() => makeDefault(index)}>
                   <Text style={styles.defaultText}>Make Default</Text>
                 </TouchableOpacity>
@@ -218,7 +245,6 @@ export default function AddressListScreen() {
           onPress={() =>
             navigation.navigate('AddAddress', {
               editData: null,
-              editIndex: undefined,
             })
           }
         >
