@@ -15,6 +15,12 @@ import {
   Image,
   Modal,
 } from 'react-native';
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+} from 'lucide-react-native';
+
 import { useCart } from '../context/CartContext';
 import Config from "react-native-config";
 
@@ -28,6 +34,8 @@ export default function PaymentScreen({
   const { user } = useAuth();
   const buyNow = route?.params?.buyNow;
 const product = route?.params?.product;
+const [selectedAddress, setSelectedAddress] =
+  useState<any>(route?.params?.selectedAddress || null);
 
 // NEW
 const paymentType = route?.params?.type || "order";
@@ -117,7 +125,15 @@ useEffect(() => {
 
   const handleCreatePaymentOrder = async () => {
   try {
-    
+
+    if (!isMembership && !selectedAddress?.id) {
+      Alert.alert(
+        "Address Required",
+        "Please select a delivery address before making payment."
+      );
+      return;
+    }
+
     const response = await createOrder(
       "ORDER_" + Date.now(),
       payableAmount,
@@ -172,6 +188,7 @@ const razorpayOrder = response.data.razorpayOrder;
           paymentType: isMembership ? "MEMBERSHIP" : "ORDER",
           membershipPlanId: membershipPlan?.id,
           userId: user.id,
+          address_id: selectedAddress?.id,
           buyNow,
           productId: product?.id,
           quantity: 1,
@@ -243,10 +260,13 @@ const handleMembershipPayment = async () => {
 
       <View style={styles.header}>
                     <TouchableOpacity
-                      style={styles.backButton}
                       onPress={() => navigation.goBack()}
                       hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                      <Text style={styles.backIcon}>‹</Text>
+                      <CircleChevronLeft 
+                        size={24}
+                        color="#000000"
+                        strokeWidth={2}
+                          />
                     </TouchableOpacity>
             
                     <View style={styles.brandContainer}>

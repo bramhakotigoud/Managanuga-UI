@@ -11,8 +11,13 @@ import {
 } from "react-native-permissions";
 
 import { Platform } from "react-native";
-import { getPincodeDetails } from "../services/addressService";
+import {
+  getPincodeDetails,
+  addAddress,
+  updateAddress,
+} from "../services/addressService";
 import { useRoute } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
 import {
   SafeAreaView,
   ScrollView,
@@ -24,10 +29,17 @@ import {
   Alert,
   Image,
 } from 'react-native';
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+} from 'lucide-react-native';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AddAddressScreen({ navigation }: any) {
   const route = useRoute();
+  const { user } = useAuth();
   const editData = (route.params as any)?.editData;
   const editIndex = (route.params as any)?.editIndex;
 
@@ -47,18 +59,18 @@ const addressInputRef = useRef<TextInput>(null);
 const [addressSearchActive, setAddressSearchActive] = useState(false);
 
 
-  useEffect(() => {
-    if (editData) {
-      setName(editData.name || '');
-      setMobile(editData.mobile || '');
-      setAddress(editData.address || '');
-      setLandmark(editData.landmark || '');
-      setCity(editData.city || '');
-      setState(editData.state || '');
-      setPincode(editData.pincode || '');
-      setAddressType(editData.type || editData.addressType || 'Home');
-    }
-  }, [editData]);
+ useEffect(() => {
+  if (editData) {
+    setName(editData.full_name || '');
+    setMobile(editData.phone || '');
+    setAddress(editData.address_line1 || '');
+    setLandmark(editData.address_line2 || '');
+    setCity(editData.city || '');
+    setState(editData.state || '');
+    setPincode(editData.postal_code || '');
+    setAddressType(editData.address_type || 'Home');
+  }
+}, [editData]);
 const requestLocationPermission = async () => {
 
   const permission =
@@ -214,82 +226,113 @@ const handleCurrentLocation = async () => {
   );
 };
   const handleSaveAddress = async () => {
-    if (!name.trim()) {
-      Alert.alert('Validation Error', 'Please enter your name');
-      return;
-    }
-    if (mobile.length !== 10) {
-      Alert.alert('Validation Error', 'Mobile number must contain 10 digits');
-      return;
-    }
-   if (!address.trim()) {
-  Alert.alert('Validation Error', 'Please enter your address');
-  return;
-}
-    if (!city.trim()) {
-      Alert.alert('Validation Error', 'Please enter city');
-      return;
-    }
-    if (!state.trim()) {
-      Alert.alert('Validation Error', 'Please enter state');
-      return;
-    }
-    if (pincode.length !== 6) {
-      Alert.alert('Validation Error', 'Pincode must contain 6 digits');
-      return;
+  if (!name.trim()) {
+    Alert.alert('Validation Error', 'Please enter your name');
+    return;
+  }
+
+  if (mobile.length !== 10) {
+    Alert.alert(
+      'Validation Error',
+      'Mobile number must contain 10 digits'
+    );
+    return;
+  }
+
+  if (!address.trim()) {
+    Alert.alert('Validation Error', 'Please enter your address');
+    return;
+  }
+
+  if (!city.trim()) {
+    Alert.alert('Validation Error', 'Please enter city');
+    return;
+  }
+
+  if (!state.trim()) {
+    Alert.alert('Validation Error', 'Please enter state');
+    return;
+  }
+
+  if (pincode.length !== 6) {
+    Alert.alert(
+      'Validation Error',
+      'Pincode must contain 6 digits'
+    );
+    return;
+  }
+
+  if (!user?.id) {
+    Alert.alert(
+      'Login Required',
+      'Please login before saving an address.'
+    );
+    return;
+  }
+
+  try {
+    const addressData = {
+      entity_type: 'USER',
+      entity_id: Number(user.id),
+      address_type: addressType,
+      full_name: name.trim(),
+      phone: mobile,
+      address_line1: address.trim(),
+      address_line2: landmark.trim(),
+      city: city.trim(),
+      state: state.trim(),
+      country: 'India',
+      postal_code: pincode,
+      is_default: editData
+           ? editData.is_default
+           : false,
+    };
+
+    let response;
+
+    if (editData?.id) {
+      response = await updateAddress(
+        Number(editData.id),
+        addressData
+      );
+    } else {
+      response = await addAddress(addressData);
     }
 
-    try {
-      const data = await AsyncStorage.getItem('addresses');
-      let addressList = data ? JSON.parse(data) : [];
+    if (!response?.success) {
+      throw new Error(
+        response?.message || 'Failed to save address'
+      );
+    }
 
-      const newAddress = {
-  id: editData?.id || Date.now().toString(),
-  name,
-  mobile,
-  address,
-  landmark,
-  city,
-  state,
-  pincode,
-  type: addressType,
-  addressType,
-  isDefault: editData
-    ? editData.isDefault
-    : addressList.length === 0,
+    console.log(
+      'ADDRESS SAVED TO DATABASE:',
+      response.data
+    );
+
+    navigation.goBack();
+  } catch (error: any) {
+    console.error('SAVE ADDRESS ERROR:', error);
+
+    Alert.alert(
+      'Error',
+      error?.message ||
+        'Failed to save address. Please try again.'
+    );
+  }
 };
-
-      if (editData && (editIndex !== undefined || editData.id)) {
-        // Edit existing address
-        if (editIndex !== undefined && editIndex >= 0) {
-          addressList[editIndex] = newAddress;
-        } else {
-          addressList = addressList.map((item: any) =>
-            item.id === editData.id ? newAddress : item
-          );
-        }
-      } else {
-        // Add new address
-        addressList.push(newAddress);
-      }
-
-      await AsyncStorage.setItem('addresses', JSON.stringify(addressList));
-      navigation.goBack();
-    } catch (e) {
-      console.log('Error saving address:', e);
-      Alert.alert('Error', 'Failed to save address. Please try again.');
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       {/* FIXED BRAND HEADER WITH BACK BUTTON & LOGO (NO BELL/CART ICONS) */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.backIcon}>‹</Text>
+          <CircleChevronLeft 
+              size={24}
+              color="#000000"
+              strokeWidth={2}
+              />
         </TouchableOpacity>
 
         <View style={styles.brandContainer}>

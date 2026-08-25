@@ -15,6 +15,11 @@ import {
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+} from 'lucide-react-native';
 
 import {useAuth} from '../context/AuthContext';
 import {useCart} from '../context/CartContext';
@@ -271,69 +276,33 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* =================================================
-          HEADER
-          ================================================= */}
-
       <View style={styles.header}>
-        {/* LOGO + TITLE */}
-
-        <View style={styles.logoSection}>
-          <Image
-            source={require('../assets/images/logo.png')}
-            style={styles.logo}
-          />
-
-          <View>
-            <Text style={styles.appName}>
-              Mana Ganuga
-            </Text>
-
-            <Text style={styles.tagline}>
-              Pure Tradition • Healthy Future
-            </Text>
-          </View>
-        </View>
-
-        {/* HEADER ACTIONS */}
-
-        <View style={styles.headerRightActions}>
-          {/* NOTIFICATION */}
-
-          <TouchableOpacity
-            style={styles.iconButton}
-            activeOpacity={0.7}>
-            <Text style={styles.headerIconText}>
-              🔔
-            </Text>
-          </TouchableOpacity>
-
-          {/* CART */}
-
-          <TouchableOpacity
-            style={styles.cartIconWrapper}
-            activeOpacity={0.7}
-            onPress={() =>
-              navigation.navigate(
-                'Cart' as never,
-              )
-            }>
-            <Text style={styles.headerIconText}>
-              🛒
-            </Text>
-
-            {cartCount > 0 && (
-              <View style={styles.badgeContainer}>
-                <Text style={styles.badgeText}>
-                  {cartCount > 99
-                    ? '99+'
-                    : cartCount}
-                </Text>
+              <TouchableOpacity
+                onPress={() => navigation.goBack()}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <CircleChevronLeft 
+                    size={24}
+                    color="#000000"
+                    strokeWidth={2}
+                    />
+              </TouchableOpacity>
+      
+              <View style={styles.brandContainer}>
+                <Image
+                  source={require('../assets/images/logo.png')}
+                  style={styles.logo}
+                />
+                <View style={styles.brandTextContainer}>
+                  <Text style={styles.brandTitle}>Mana Ganuga</Text>
+                  <Text style={styles.brandSubtitle}>Pure Tradition • Healthy Future</Text>
+                </View>
               </View>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+      
+              <View style={styles.headerRightPlaceholder} />
+            </View>
+      
+
+      
 
       {/* =================================================
           NOTIFICATION LIST
@@ -390,18 +359,18 @@ const styles = StyleSheet.create({
   // ===================================================
 
   header: {
+    backgroundColor: '#F8F4EC',
     paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
-    backgroundColor: '#FFFFFF',
-
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    zIndex: 10,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
 
   logoSection: {
@@ -604,5 +573,25 @@ const styles = StyleSheet.create({
     marginTop: 6,
     fontSize: 14,
     color: '#777777',
+  },
+  brandTextContainer: {
+    justifyContent: 'center',
+  },
+  brandTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2D341F',
+  },
+  brandSubtitle: {
+    fontSize: 9,
+    color: '#8C8C8C',
+    fontWeight: '500',
+  },
+  headerRightPlaceholder: {
+    width: 36,
+  },
+   brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

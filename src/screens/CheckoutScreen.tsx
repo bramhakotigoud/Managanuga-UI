@@ -1,8 +1,9 @@
 import { useCart } from '../context/CartContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { useAuth } from "../context/AuthContext";
 import { getCheckoutSummary } from "../services/paymentService";
+import { useFocusEffect } from '@react-navigation/native';
+import { getAddresses } from '../services/addressService';
 import {
   SafeAreaView,
   ScrollView,
@@ -12,6 +13,11 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
+import {
+  Bell,
+  ShoppingCart,
+  CircleChevronLeft,
+} from 'lucide-react-native';
 
 export default function CheckoutScreen({
   navigation,
@@ -21,7 +27,8 @@ export default function CheckoutScreen({
   const { user } = useAuth();
   const buyNow = route?.params?.buyNow;
   const product = route?.params?.product;
-  const [selectedAddress, setSelectedAddress] = useState<any>(null);
+  const [selectedAddress, setSelectedAddress] =
+  useState<any>(route?.params?.selectedAddress || null);
   const [benefits, setBenefits] =
   useState<any>(null);
 
@@ -39,27 +46,44 @@ export default function CheckoutScreen({
     return sum + Number(q);
   }, 0);
 
-  useEffect(() => {
-  loadAddress();
-
-  if (user?.id) {
-    loadMembershipBenefits();
+const loadAddress = async () => {
+  if (!user?.id) {
+    setSelectedAddress(null);
+    return;
   }
-}, [user]);
 
-  const loadAddress = async () => {
-    const data = await AsyncStorage.getItem('addresses');
+  try {
+    const response = await getAddresses(Number(user.id));
 
-    if (data) {
-      const addresses = JSON.parse(data);
+    console.log('CHECKOUT ADDRESSES:', response);
+
+    if (response?.success) {
+      const addresses = response.data || [];
 
       const defaultAddress = addresses.find(
-        (item: any) => item.isDefault
+        (item: any) => item.is_default === true
       );
 
-      setSelectedAddress(defaultAddress);
+      console.log('CHECKOUT DEFAULT ADDRESS:', defaultAddress);
+
+      setSelectedAddress(defaultAddress || null);
+    } else {
+      setSelectedAddress(null);
     }
-  };
+  } catch (error) {
+    console.log('CHECKOUT ADDRESS ERROR:', error);
+    setSelectedAddress(null);
+  }
+};
+useFocusEffect(
+  React.useCallback(() => {
+    loadAddress();
+
+    if (user?.id) {
+      loadMembershipBenefits();
+    }
+  }, [user?.id])
+);
   const loadMembershipBenefits = async () => {
 
   try {
@@ -88,10 +112,13 @@ export default function CheckoutScreen({
       {/* FIXED BRAND HEADER WITH BACK BUTTON, LOGO, BELL & CART BADGE */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.backIcon}>‹</Text>
+          <CircleChevronLeft 
+            size={24}
+            color="#000000"
+            strokeWidth={2}
+              />
         </TouchableOpacity>
 
         <View style={styles.logoSection}>
@@ -107,15 +134,23 @@ export default function CheckoutScreen({
 
         <View style={styles.headerIcons}>
           <TouchableOpacity
-            style={styles.iconButton}
             onPress={() => navigation.navigate('Notifications')}>
-            <Text style={styles.headerIconText}>🔔</Text>
+            <Bell
+              size={24}
+              color="#000000"
+              strokeWidth={2}
+            />
           </TouchableOpacity>
 
+
           <TouchableOpacity
-            style={styles.cartIconWrapper}
+            style={{ marginLeft: 14 }}
             onPress={() => navigation.navigate('Cart')}>
-            <Text style={styles.headerIconText}>🛒</Text>
+                   <ShoppingCart
+              size={24}
+              color="#0c0502"
+              strokeWidth={2}
+            />
             {Boolean(cartCount) && cartCount > 0 ? (
               <View style={styles.badgeContainer}>
                 <Text style={styles.badgeText}>
@@ -159,22 +194,35 @@ export default function CheckoutScreen({
         <View style={styles.card}>
           <Text style={styles.heading}>Delivery Address</Text>
           
-          {!selectedAddress ? (
-            <Text style={{ color: 'red', marginVertical: 5 }}>
-              No default address selected
-            </Text>
-          ) : (
-            <>
-              <Text style={styles.name}>{selectedAddress?.name}</Text>
-              <Text style={styles.address}>
-                {selectedAddress?.houseNo}, {selectedAddress?.street}
-              </Text>
-              <Text style={styles.address}>
-                {selectedAddress?.city}, {selectedAddress?.state} - {selectedAddress?.pincode}
-              </Text>
-              <Text style={styles.mobile}>{selectedAddress?.mobile}</Text>
-            </>
-          )}
+         {!selectedAddress ? (
+  <Text style={{ color: 'red', marginVertical: 5 }}>
+    No default address selected
+  </Text>
+) : (
+  <>
+    <Text style={styles.name}>
+      {selectedAddress?.full_name}
+    </Text>
+
+    <Text style={styles.address}>
+      {selectedAddress?.address_line1}
+      {selectedAddress?.address_line2
+        ? `, ${selectedAddress.address_line2}`
+        : ''}
+    </Text>
+
+    <Text style={styles.address}>
+      {selectedAddress?.city}, {selectedAddress?.state}
+      {selectedAddress?.postal_code
+        ? ` - ${selectedAddress.postal_code}`
+        : ''}
+    </Text>
+
+    <Text style={styles.mobile}>
+      {selectedAddress?.phone}
+    </Text>
+  </>
+)}
 
           <TouchableOpacity
             onPress={() =>
@@ -343,10 +391,11 @@ export default function CheckoutScreen({
   }
 
   navigation.navigate("Payment", {
-    type: "order",
-    buyNow,
-    product,
-  });
+  type: "order",
+  buyNow,
+  product,
+  selectedAddress,
+});
 
 }}>
         <Text style={styles.buttonText}>Continue</Text>

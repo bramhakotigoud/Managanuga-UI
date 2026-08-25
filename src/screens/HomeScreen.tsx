@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import {useGifAnimation} from '../context/GifAnimationContext';
 import ProductCard from '../components/ProductCard';
 import { useCart } from '../context/CartContext';
 import { useFocusEffect } from '@react-navigation/native';
@@ -30,6 +30,13 @@ import {
   Leaf,
   PackageSearch,
   Sprout,
+  Handbag,
+  Flame,
+  Sparkles,
+  TagPlus,
+  Gem,
+  Gift,
+  List,
 } from 'lucide-react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -39,6 +46,7 @@ const BANNER_WIDTH = SCREEN_WIDTH - 30;
 export const HeaderCartButton = () => {
   const navigation = useNavigation();
   const { cartItems } = useCart();
+  
 
   const cartCount = cartItems.reduce(
     (total: number, item: any) => total + (item.quantity || item.qty || 1),
@@ -67,6 +75,7 @@ export const HeaderCartButton = () => {
 
 // Main HomeScreen component
 const HomeScreen = () => {
+  const {restartGif} = useGifAnimation();
   const navigation = useNavigation();
   const {user} = useAuth();
   const hideMembership = String(user?.mobile_no) === '9347499591';
@@ -178,7 +187,9 @@ useFocusEffect(
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView
+  style={styles.safeArea}
+  onTouchStart={restartGif}>
       {/* FIXED TOP HEADER */}
       <View style={styles.header}>
         <View style={styles.brandSection}>
@@ -236,8 +247,10 @@ useFocusEffect(
 
       {/* SCROLLABLE CONTENT */}
       <ScrollView
-        style={styles.container}
-        showsVerticalScrollIndicator={false}>
+  style={styles.container}
+  showsVerticalScrollIndicator={false}
+  onScroll={restartGif}
+  scrollEventThrottle={16}>
 
         
 
@@ -261,7 +274,10 @@ useFocusEffect(
           contentContainerStyle={styles.topCategoryContainer}>
 
           <TouchableOpacity style={styles.topCategoryItem}>
-            <Text style={styles.topCategoryIcon}>🛍️</Text>
+            <Handbag
+            size={20}
+            color="#2D341F"
+            strokeWidth={2}/>
             <Text style={styles.activeCategoryText}>For You</Text>
             <View style={styles.activeCategoryLine} />
           </TouchableOpacity>
@@ -271,7 +287,11 @@ useFocusEffect(
             onPress={() =>
               navigation.navigate('Products' as never, { category: 'Sunflower' } as never)
             }>
-            <Text style={styles.topCategoryIcon}>🔥</Text>
+            <Flame
+            size={20}
+            color="#2D341F"
+            strokeWidth={2}/>
+
             <Text style={styles.categoryLabel}>Trending</Text>
           </TouchableOpacity>
 
@@ -280,7 +300,10 @@ useFocusEffect(
             onPress={() =>
               navigation.navigate('Products' as never, { category: 'Groundnut' } as never)
             }>
-            <Text style={styles.topCategoryIcon}>⭐</Text>
+            <Sparkles
+            size={20}
+            color="#2D341F"
+            strokeWidth={2}/>
             <Text style={styles.categoryLabel}>Best Sellers</Text>
           </TouchableOpacity>
 
@@ -289,7 +312,10 @@ useFocusEffect(
             onPress={() =>
               navigation.navigate('Products' as never, { category: 'Coconut' } as never)
             }>
-            <Text style={styles.topCategoryIcon}>🆕</Text>
+            <TagPlus
+            size={20}
+            color="#2D341F"
+            strokeWidth={2}/>
             <Text style={styles.categoryLabel}>New Arrivals</Text>
           </TouchableOpacity>
 
@@ -298,17 +324,26 @@ useFocusEffect(
             onPress={() =>
               navigation.navigate('Products' as never, { category: 'Sesame' } as never)
             }>
-            <Text style={styles.topCategoryIcon}>💎</Text>
+            <Gem
+            size={20}
+            color="#2D341F"
+            strokeWidth={2}/>
             <Text style={styles.categoryLabel}>Premium</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.topCategoryItem}>
-            <Text style={styles.topCategoryIcon}>🎁</Text>
+            <Gift
+            size={20}
+            color="#2D341F"
+            strokeWidth={2}/>
             <Text style={styles.categoryLabel}>Combo</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.topCategoryItem}>
-            <Text style={styles.topCategoryIcon}>☰</Text>
+            <List
+            size={20}
+            color="#2D341F"
+            strokeWidth={2}/>
             <Text style={styles.categoryLabel}>More</Text>
           </TouchableOpacity>
 
@@ -529,8 +564,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: 55,
+    height: 55,
     resizeMode: 'contain',
     marginRight: 8,
   },
@@ -670,7 +705,7 @@ const styles = StyleSheet.create({
   },
   activeCategoryText: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#2D341F',
   },
   categoryLabel: {

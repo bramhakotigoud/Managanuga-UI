@@ -21,12 +21,14 @@ import {
 } from 'lucide-react-native';
 
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { getOrders } from "../services/orderService";
 
 export default function OrdersScreen({
   navigation,
 }: any) {
   const { cartItems } = useCart();
+  const { user } = useAuth();
 
   // Calculate cart count safely
   const cartCount =
@@ -40,9 +42,9 @@ export default function OrdersScreen({
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    loadOrders();
-  }, []);
+ useEffect(() => {
+  loadOrders();
+}, [user?.id]);
 
   useEffect(() => {
     if (search.trim() === "") {
@@ -62,19 +64,28 @@ export default function OrdersScreen({
   }, [search, orders]);
 
   const loadOrders = async () => {
-    try {
-      const response = await getOrders("USER", 1);
-
-      if (response.success) {
-        setOrders(response.data);
-        setFilteredOrders(response.data);
-      }
-    } catch (e) {
-      console.log(e);
-    } finally {
-      setLoading(false);
+  try {
+    if (!user?.id) {
+      setOrders([]);
+      setFilteredOrders([]);
+      return;
     }
-  };
+
+    const response = await getOrders(
+      "USER",
+      Number(user.id)
+    );
+
+    if (response.success) {
+      setOrders(response.data || []);
+      setFilteredOrders(response.data || []);
+    }
+  } catch (e) {
+    console.log("LOAD ORDERS ERROR:", e);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Helper function to resolve remote images or fallbacks correctly
   const getImageSource = (imagePath: string) => {
@@ -300,15 +311,15 @@ const styles = StyleSheet.create({
 
   /* Fixed Header Styles */
   header: {
-    backgroundColor: "#F8F4EE",
+    backgroundColor: '#F8F4EC',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     zIndex: 10,
     elevation: 2,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
@@ -535,5 +546,18 @@ const styles = StyleSheet.create({
     marginTop: 3,
     fontSize: 12,
     color: "#777",
+  },
+  brandTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2D341F',
+  },
+  brandSubtitle: {
+    fontSize: 9,
+    color: '#8C8C8C',
+    fontWeight: '500',
+  },
+  headerRightPlaceholder: {
+    width: 36,
   },
 });
