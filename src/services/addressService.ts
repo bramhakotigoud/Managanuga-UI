@@ -2,6 +2,20 @@ import Config from "react-native-config";
 
 const BASE_URL = Config.API_BASE_URL;
 
+const readResponse = async (response: Response) => {
+  const body = await response.text();
+
+  if (!body) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(body);
+  } catch {
+    return {message: body};
+  }
+};
+
 export interface Address {
   id?: number;
   entity_type: string;
@@ -42,11 +56,11 @@ export const addAddress = async (
     }
   );
 
-  const data = await response.json();
+  const data = await readResponse(response);
 
   if (!response.ok) {
     throw new Error(
-      data?.message || "Failed to add address"
+      data?.message || `Request failed (${response.status})`
     );
   }
 
@@ -60,11 +74,11 @@ export const getAddresses = async (
     `${BASE_URL}/address?entity_type=USER&entity_id=${userId}`
   );
 
-  const data = await response.json();
+  const data = await readResponse(response);
 
   if (!response.ok) {
     throw new Error(
-      data?.message || "Failed to fetch addresses"
+      data?.message || `Request failed (${response.status})`
     );
   }
 
@@ -86,11 +100,11 @@ export const updateAddress = async (
     }
   );
 
-  const data = await response.json();
+  const data = await readResponse(response);
 
   if (!response.ok) {
     throw new Error(
-      data?.message || "Failed to update address"
+      data?.message || `Request failed (${response.status})`
     );
   }
 
@@ -107,11 +121,11 @@ export const deleteAddress = async (
     }
   );
 
-  const data = await response.json();
+  const data = await readResponse(response);
 
-  if (!response.ok) {
+  if (!response.ok || data?.success === false) {
     throw new Error(
-      data?.message || "Failed to delete address"
+      data?.message || `Request failed (${response.status})`
     );
   }
 
