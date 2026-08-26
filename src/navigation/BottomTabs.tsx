@@ -25,8 +25,8 @@ function BottomTabsNavigator() {
     <Tab.Navigator
       screenOptions={({route}) => ({
         headerShown: false,
-        tabBarActiveTintColor: '#948635',
-        tabBarInactiveTintColor: '#999',
+        tabBarActiveTintColor: '#A84B21',
+        tabBarInactiveTintColor: '#000000',
 
         tabBarStyle: {
   height: 78,
@@ -57,11 +57,11 @@ function BottomTabsNavigator() {
               <Path
                 d="
                   M 0 12
-                  H 155
-                  C 165 12, 172 22, 178 35
-                  C 186 52, 192 60, 200 60
-                  C 208 60, 214 52, 222 35
-                  C 228 22, 235 12, 245 12
+                  H 150
+                  C 162 12, 170 20, 176 38
+                  C 182 58, 189 72, 200 72
+                  C 211 72, 218 58, 224 38
+                  C 230 20, 238 12, 250 12
                   H 400
                   V 90
                   H 0
@@ -137,7 +137,7 @@ function BottomTabsNavigator() {
               <View
                 style={{
                   position: 'absolute',
-                  top: -20,
+                  top: -24,
                   width: 68,
                   height: 68,
                   borderRadius: 34,
