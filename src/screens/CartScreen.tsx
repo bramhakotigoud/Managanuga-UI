@@ -15,7 +15,7 @@ import {
   ShoppingCart,
   CircleChevronLeft,
 } from 'lucide-react-native';
-
+import {getProductImage} from '../utils/productImage';
 import { useCart } from '../context/CartContext';
 
 const CartScreen = ({ navigation }: any) => {
@@ -122,17 +122,30 @@ const CartScreen = ({ navigation }: any) => {
 
         {cartItems.map((item: any) => (
           <View key={item.id} style={styles.card}>
-            <Image
-              source={item.image}
-              style={styles.image}
-            />
-
+           <Image
+  source={getProductImage(item.image)}
+  style={styles.productImage}
+/>
             <View style={styles.details}>
               <Text style={styles.name}>{item.name}</Text>
 
               <Text style={styles.rating}>⭐ {item.rating}</Text>
 
-              <Text style={styles.price}>₹{item.price}</Text>
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+  <Text style={styles.price}>₹{item.price}</Text>
+
+  {item.size && (
+    <Text
+      style={{
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+      }}>
+      • {item.size}
+    </Text>
+  )}
+</View>
 
               <View style={styles.qtyRow}>
                 <TouchableOpacity

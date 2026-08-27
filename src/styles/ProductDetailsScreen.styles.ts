@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   },
 
   relatedCard: {
-    width: 140,
+    width: 110,
     backgroundColor: '#fff',
     borderRadius: 14,
     padding: 12,
@@ -395,6 +395,110 @@ const styles = StyleSheet.create({
     color: '#2E7D32',
     marginLeft: 10,
   },
+  benefitRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 8,
+},
+ratingSummary: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 6,
+},
+
+reviewCount: {
+  fontSize: 14,
+  color: '#777',
+  marginLeft: 5,
+},
+
+reviewCard: {
+  backgroundColor: '#FFF',
+  borderRadius: 16,
+  padding: 16,
+  marginHorizontal: 15,
+  marginTop: 10,
+  borderWidth: 1,
+  borderColor: '#E8E0D5',
+},
+
+yourRatingTitle: {
+  fontSize: 16,
+  fontWeight: '700',
+  color: '#3E2A1F',
+},
+
+starSelector: {
+  flexDirection: 'row',
+  gap: 8,
+  marginTop: 12,
+},
+
+reviewInput: {
+  minHeight: 90,
+  borderWidth: 1,
+  borderColor: '#DDD',
+  borderRadius: 12,
+  padding: 12,
+  marginTop: 15,
+  textAlignVertical: 'top',
+  color: '#333',
+},
+
+submitReviewButton: {
+  backgroundColor: '#A84B21',
+  borderRadius: 12,
+  paddingVertical: 13,
+  marginTop: 12,
+  alignItems: 'center',
+},
+
+submitReviewText: {
+  color: '#FFF',
+  fontSize: 15,
+  fontWeight: '700',
+},
+
+reviewsList: {
+  marginHorizontal: 15,
+  marginTop: 10,
+},
+
+singleReview: {
+  backgroundColor: '#FFF',
+  borderRadius: 14,
+  padding: 15,
+  marginBottom: 10,
+  borderWidth: 1,
+  borderColor: '#E8E0D5',
+},
+
+reviewHeader: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+},
+
+reviewerName: {
+  fontSize: 15,
+  fontWeight: '700',
+  color: '#3E2A1F',
+},
+
+
+
+reviewDate: {
+  fontSize: 12,
+  color: '#999',
+  marginTop: 8,
+},
+
+
+noReviewsText: {
+  fontSize: 14,
+  color: '#777',
+  lineHeight: 20,
+},
 });
 
 export default styles;

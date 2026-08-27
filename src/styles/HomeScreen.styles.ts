@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   bottomSpacing: {
-    height: 55,
+    height: 110,
   },
   membershipIcon: {
     width: 30,
@@ -238,6 +238,7 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
   },
+  
 });
 
 export {bannerWidth};

@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { getCheckoutSummary } from "../services/paymentService";
 import { useFocusEffect } from '@react-navigation/native';
 import { getAddresses } from '../services/addressService';
+import {getProductImage} from '../utils/productImage';
 import {
   SafeAreaView,
   ScrollView,
@@ -240,7 +241,10 @@ useFocusEffect(
         {checkoutItems.map((item, index) => (
           <View key={index} style={styles.productCard}>
             <View style={styles.productRow}>
-              <Image source={item.image} style={styles.productImage} />
+              <Image
+  source={getProductImage(item.image)}
+  style={styles.productImage}
+/>
 
               <View style={styles.productDetails}>
                 <Text style={styles.productName}>{item.name}</Text>
@@ -248,8 +252,21 @@ useFocusEffect(
                 <Text style={styles.productQty}>
                   Qty: {item.quantity || 1}
                 </Text>
+               <View style={{flexDirection: 'row', alignItems: 'center'}}>
+  <Text style={styles.productPrice}>₹{item.price}</Text>
 
-                <Text style={styles.productPrice}>₹{item.price}</Text>
+  {item.size && (
+    <Text
+      style={{
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#666',
+        fontWeight: '500',
+      }}>
+      • {item.size}
+    </Text>
+  )}
+</View>
 
                 <Text style={styles.deliveryText}>Delivery in 2 days</Text>
               </View>

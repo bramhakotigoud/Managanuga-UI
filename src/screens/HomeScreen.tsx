@@ -20,6 +20,8 @@ import { useAuth } from '../context/AuthContext';
 import { getUnreadCount } from '../services/notificationService';
 import styles, {bannerWidth} from '../styles/HomeScreen.styles';
 // Get screen width dynamically (Subtract 30 to account for container padding: 15 left + 15 right)
+import Config from 'react-native-config';
+import {getProductImage} from '../utils/productImage';
 import {
   Bell,
   ShoppingCart,
@@ -129,36 +131,7 @@ useFocusEffect(
     return () => slideAnimation.stop();
   }, [slideAnim]);
 
-  const featuredProducts = [
-    {
-      id: 1,
-      name: 'Sunflower Oil',
-      price: 299,
-      rating: 4.8,
-      image: require('../assets/images/sunflower.png'),
-    },
-    {
-      id: 2,
-      name: 'Groundnut Oil',
-      price: 349,
-      rating: 4.9,
-      image: require('../assets/images/groundnut.png'),
-    },
-    {
-      id: 3,
-      name: 'Coconut Oil',
-      price: 399,
-      rating: 4.9,
-      image: require('../assets/images/coconut.png'),
-    },
-    {
-      id: 4,
-      name: 'Sesame Oil',
-      price: 329,
-      rating: 4.8,
-      image: require('../assets/images/sesame.png'),
-    },
-  ];
+const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const handleShareReferral = async () => {
     try {
       await Share.share({
@@ -173,6 +146,27 @@ useFocusEffect(
   useEffect(() => {
     loadAddress();
   }, []);
+  useEffect(() => {
+  const loadFeaturedProducts = async () => {
+    try {
+      const response = await fetch(
+        `${Config.API_BASE_URL}/products`,
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+
+      const result = await response.json();
+
+      setFeaturedProducts(result.data || []);
+    } catch (error) {
+      console.error('Failed to load featured products:', error);
+    }
+  };
+
+  loadFeaturedProducts();
+}, []);
 
   const loadAddress = async () => {
     const data = await AsyncStorage.getItem('addresses');

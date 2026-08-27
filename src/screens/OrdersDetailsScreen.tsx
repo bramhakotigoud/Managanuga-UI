@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import styles from '../styles/OrdersDetailsScreen.styles';
 import Config from "react-native-config";
-
+import { useAuth } from "../context/AuthContext";
 const BASE_URL = Config.BASE_URL;
-
+import {
+  getProductReviews,
+  submitProductReview,
+} from "../services/productReviewService";
 import {
   SafeAreaView,
   ScrollView,
@@ -13,6 +16,7 @@ import {
   Image,
   ActivityIndicator,
   StatusBar,
+  TextInput,
 } from "react-native";
 import {
   Bell,
@@ -37,6 +41,7 @@ export default function OrderDetailsScreen({
   route,
 }: any) {
   const { cartItems } = useCart();
+  const { user } = useAuth();
 
   // Calculate cart count safely
   const cartCount =
@@ -51,6 +56,17 @@ export default function OrderDetailsScreen({
   const [order, setOrder] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [tracking, setTracking] = useState<any>(null);
+  const [selectedRatings, setSelectedRatings] = useState<{
+  [key: number]: number;
+}>({});
+
+const [reviewTexts, setReviewTexts] = useState<{
+  [key: number]: string;
+}>({});
+
+const [submittingReviews, setSubmittingReviews] = useState<{
+  [key: number]: boolean;
+}>({});
 
   const loadOrder = async () => {
     try {
@@ -124,8 +140,51 @@ export default function OrderDetailsScreen({
     (sum: number, item: any) => sum + (item.quantity || 1),
     0
   );
+const handleSubmitReview = async (productId: number) => {
+  const rating = selectedRatings[productId] || 0;
+  const review = reviewTexts[productId] || "";
 
-  if (loading) {
+  if (!user?.user_id || rating === 0) {
+    return;
+  }
+
+  try {
+    setSubmittingReviews(prev => ({
+      ...prev,
+      [productId]: true,
+    }));
+
+    const response = await submitProductReview(
+      productId,
+      user.user_id,
+      rating,
+      review.trim()
+    );
+
+    if (response.success) {
+      setSelectedRatings(prev => ({
+        ...prev,
+        [productId]: 0,
+      }));
+
+      setReviewTexts(prev => ({
+        ...prev,
+        [productId]: "",
+      }));
+    }
+  } catch (error) {
+    console.error("SUBMIT REVIEW ERROR:", error);
+  } finally {
+    setSubmittingReviews(prev => ({
+      ...prev,
+      [productId]: false,
+    }));
+  }
+};
+
+if (loading) {
+
+    
     return (
       <SafeAreaView
         style={{
@@ -248,23 +307,95 @@ export default function OrderDetailsScreen({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Products</Text>
 
-          {items.map((item: any) => (
-            <View key={item.id} style={styles.productCard}>
-              <Image
-                source={getImageSource(item)}
-                style={styles.productImage}
-              />
+         {items.map((item: any) => (
+  <View key={item.id} style={styles.productCard}>
 
-              <View style={styles.productInfo}>
-                <Text style={styles.productName}>{item.product_name}</Text>
-                <Text style={styles.productQty}>Quantity : {item.quantity}</Text>
-                <Text style={styles.productPrice}>₹{item.unit_price}</Text>
-              </View>
+    {/* Product Information */}
+    <View style={styles.productRow}>
 
-              <Text style={styles.productTotal}>₹{item.total_price}</Text>
-            </View>
-          ))}
-        </View>
+      <Image
+        source={getImageSource(item)}
+        style={styles.productImage}
+      />
+
+      <View style={styles.productInfo}>
+        <Text style={styles.productName}>
+          {item.product_name}
+        </Text>
+
+        <Text style={styles.productQty}>
+          Quantity : {item.quantity}
+        </Text>
+
+        <Text style={styles.productPrice}>
+          ₹{item.unit_price}
+        </Text>
+      </View>
+
+      <Text style={styles.productTotal}>
+        ₹{item.total_price}
+      </Text>
+
+    </View>
+
+    {/* Rating & Review */}
+    <View style={styles.rateReviewSection}>
+
+      <Text style={styles.rateReviewTitle}>
+        Rate this product
+      </Text>
+
+      <View style={styles.starSelector}>
+        {[1, 2, 3, 4, 5].map(star => (
+          <TouchableOpacity
+            key={star}
+            onPress={() =>
+              setSelectedRatings(prev => ({
+                ...prev,
+                [item.item_id]: star,
+              }))
+            }
+          >
+            <Text style={styles.rateStar}>
+              {star <= (selectedRatings[item.item_id] || 0)
+                ? "★"
+                : "☆"}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <TextInput
+        placeholder="Write your review..."
+        placeholderTextColor="#888"
+        value={reviewTexts[item.item_id] || ""}
+        onChangeText={text =>
+          setReviewTexts(prev => ({
+            ...prev,
+            [item.item_id]: text,
+          }))
+        }
+        multiline
+        style={styles.reviewInput}
+      />
+
+      <TouchableOpacity
+        style={styles.submitReviewButton}
+        onPress={() => handleSubmitReview(item.item_id)}
+        disabled={submittingReviews[item.item_id]}
+      >
+        <Text style={styles.submitReviewText}>
+          {submittingReviews[item.item_id]
+            ? "Submitting..."
+            : "Submit Review"}
+        </Text>
+      </TouchableOpacity>
+
+    </View>
+
+  </View>
+))}
+  </View>
 
         {/* ADDRESS */}
         <View style={styles.section}>

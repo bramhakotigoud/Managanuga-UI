@@ -1,7 +1,12 @@
 import {useNavigation} from '@react-navigation/native';
 import styles from '../styles/ProductDetailsScreen.styles';
 import {useCart} from '../context/CartContext';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import {getProductVariants} from '../services/productVariantService';
+require('../assets/images/groundnut.png')
+import {getProductImage} from '../utils/productImage';
+import Config from 'react-native-config';
+import {getProductReviews} from '../services/productReviewService';
 import {
   View,
   Text,
@@ -18,6 +23,9 @@ import {
   ShieldCheck,
   Leaf,
   Star,
+  FlaskConicalOff,
+    Heart,
+      Sprout,
 } from 'lucide-react-native';
 
 const ProductDetailsScreen = ({route}: any) => {
@@ -32,19 +40,103 @@ const ProductDetailsScreen = ({route}: any) => {
       return total + Number(q);
     }, 0) || cartItems?.length || 0;
 
-  const product = route?.params?.product || {
-    id: 1,
-    name: 'Sunflower Oil',
-    price: 299,
-    oldPrice: 349,
-    rating: 4.8,
-    image: require('../assets/images/sunflower.png'),
+ const product = route?.params?.product || {
+  id: 1,
+  name: 'Sunflower Oil',
+  price: 299,
+  discount: 15,
+  rating: 4.8,
+  image: require('../assets/images/sunflower.png'),
+};
+const [variants, setVariants] = useState<any[]>([]);
+const [selectedVariant, setSelectedVariant] = useState<any>(null);
+const [quantity, setQuantity] = useState(1);
+const [averageRating, setAverageRating] = useState(0);
+const [reviewCount, setReviewCount] = useState(0);
+const [reviews, setReviews] = useState<any[]>([]);
+
+
+const discount = Number(product.discount) || 0;
+
+const sellingPrice = selectedVariant
+  ? Number(selectedVariant.price)
+  : Number(product.price) || 0;
+
+const actualPrice =
+  discount > 0
+    ? sellingPrice / (1 - discount / 100)
+    : sellingPrice;
+
+
+
+ const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  useEffect(() => {
+  const loadVariants = async () => {
+    try {
+      const data = await getProductVariants(Number(product.id));
+
+      setVariants(data);
+
+      if (data.length > 0) {
+        setSelectedVariant(data[0]);
+      }
+    } catch (error) {
+      console.error('Failed to load product variants:', error);
+    }
   };
 
-  const [selectedSize, setSelectedSize] = useState('500ml');
-  const [quantity, setQuantity] = useState(1);
+  loadVariants();
+}, [product.id]);
+useEffect(() => {
+  const loadRelatedProducts = async () => {
+    try {
+      const response = await fetch(
+        `${Config.API_BASE_URL}/products`,
+      );
 
-  const sizes = ['250ml', '500ml', '1L', '2L'];
+      if (!response.ok) {
+        throw new Error('Failed to fetch related products');
+      }
+
+      const result = await response.json();
+
+      const products = result.data || [];
+
+      const related = products.filter(
+        (item: any) => Number(item.id) !== Number(product.id),
+      );
+
+      setRelatedProducts(related);
+    } catch (error) {
+      console.error('Failed to load related products:', error);
+    }
+  };
+
+  loadRelatedProducts();
+}, [product.id]);
+useEffect(() => {
+  const loadReviews = async () => {
+    try {
+      const response = await getProductReviews(Number(product.id));
+
+      if (response.success) {
+        setAverageRating(
+          Number(response.rating?.average_rating) || 0
+        );
+
+        setReviewCount(
+          Number(response.rating?.review_count) || 0
+        );
+
+        setReviews(response.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to load product reviews:', error);
+    }
+  };
+
+  loadReviews();
+}, [product.id]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -106,10 +198,15 @@ const ProductDetailsScreen = ({route}: any) => {
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Product Image */}
         <View style={styles.imageContainer}>
-          <Image source={product.image} style={styles.productImage} />
+          <Image
+  source={getProductImage(product.image)}
+  style={styles.productImage}
+/>
 
           <View style={styles.discountBadge}>
-            <Text style={styles.discountBadgeText}>15% OFF</Text>
+            <Text style={styles.discountBadgeText}>
+             {discount}% OFF
+            </Text>
           </View>
         </View>
 
@@ -117,58 +214,61 @@ const ProductDetailsScreen = ({route}: any) => {
         <Text style={styles.productName}>{product.name}</Text>
 
         {/* Rating */}
-        <Text style={styles.rating}>⭐ {product.rating} (125 Reviews)</Text>
+        <View style={styles.ratingSummary}>
+  <Text style={styles.rating}>
+    ⭐ {averageRating.toFixed(1)}
+  </Text>
+
+  <Text style={styles.reviewCount}>
+    ({reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'})
+  </Text>
+</View>
 
         {/* Price */}
         <View style={styles.priceRow}>
-          <Text style={styles.price}>₹{product.price}</Text>
+          <Text style={styles.price}>
+  ₹{sellingPrice.toFixed(0)}
+</Text>
 
-          <Text style={styles.oldPrice}>₹{product.oldPrice}</Text>
+{discount > 0 && (
+  <Text style={styles.oldPrice}>
+    ₹{actualPrice.toFixed(0)}
+  </Text>
+)}
 
-          <Text style={styles.discount}>15% OFF</Text>
+{discount > 0 && (
+  <Text style={styles.discount}>
+    {discount}% OFF
+  </Text>
+)}
         </View>
 
         {/* Size Selection */}
-        <Text style={styles.sectionTitle}>Select Size</Text>
-
-        <View style={styles.sizeContainer}>
-          {sizes.map(size => (
-            <TouchableOpacity
-              key={size}
-              onPress={() => setSelectedSize(size)}
-              style={[
-                styles.sizeButton,
-                selectedSize === size && styles.activeSizeButton,
-              ]}>
-              <Text
-                style={[
-                  styles.sizeText,
-                  selectedSize === size && styles.activeSizeText,
-                ]}>
-                {size}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Quantity */}
         <Text style={styles.sectionTitle}>Quantity</Text>
 
-        <View style={styles.quantityContainer}>
-          <TouchableOpacity
-            style={styles.qtyButton}
-            onPress={() => quantity > 1 && setQuantity(quantity - 1)}>
-            <Text style={styles.qtyText}>-</Text>
-          </TouchableOpacity>
+     <View style={styles.sizeContainer}>
+  {variants.map(variant => (
+    <TouchableOpacity
+      key={variant.id}
+      onPress={() => setSelectedVariant(variant)}
+      style={[
+        styles.sizeButton,
+        selectedVariant?.id === variant.id &&
+          styles.activeSizeButton,
+      ]}>
+      <Text
+        style={[
+          styles.sizeText,
+          selectedVariant?.id === variant.id &&
+            styles.activeSizeText,
+        ]}>
+        {variant.size}
+      </Text>
+    </TouchableOpacity>
+  ))}
+</View>
 
-          <Text style={styles.quantity}>{quantity}</Text>
-
-          <TouchableOpacity
-            style={styles.qtyButton}
-            onPress={() => setQuantity(quantity + 1)}>
-            <Text style={styles.qtyText}>+</Text>
-          </TouchableOpacity>
-        </View>
+       
 
         {/* Description */}
         <Text style={styles.sectionTitle}>Product Description</Text>
@@ -183,19 +283,51 @@ const ProductDetailsScreen = ({route}: any) => {
         <Text style={styles.sectionTitle}>Benefits</Text>
 
         <View style={styles.benefitCard}>
-          <Text style={styles.benefitText}>🌿 100% Natural Ingredients</Text>
+          <View style={styles.benefitRow}>
+         <Leaf size={18} color="#5C7A45" strokeWidth={2} />
+         <Text style={styles.benefitText}>
+         100% Natural Ingredients
+         </Text>
+         </View>
         </View>
 
         <View style={styles.benefitCard}>
-          <Text style={styles.benefitText}>🪵 Traditional Wood Pressed</Text>
+          <View style={styles.benefitRow}>
+  <Sprout
+    size={18}
+    color="#5C7A45"
+    strokeWidth={2}
+  />
+  <Text style={styles.benefitText}>
+    Traditional Wood Pressed
+  </Text>
+</View>
         </View>
 
         <View style={styles.benefitCard}>
-          <Text style={styles.benefitText}>🧪 Chemical Free Processing</Text>
+          <View style={styles.benefitRow}>
+          <FlaskConicalOff
+           size={18}
+           color="#5C7A45"
+          strokeWidth={2}
+           />
+  <Text style={styles.benefitText}>
+    Chemical Free Processing
+  </Text>
+</View>
         </View>
 
         <View style={styles.benefitCard}>
-          <Text style={styles.benefitText}>❤️ Rich in Essential Nutrients</Text>
+          <View style={styles.benefitRow}>
+  <Heart
+    size={18}
+    color="#5C7A45"
+    strokeWidth={2}
+  />
+  <Text style={styles.benefitText}>
+    Rich in Essential Nutrients
+  </Text>
+</View>
         </View>
 
         {/* Nutrition */}
@@ -260,29 +392,46 @@ const ProductDetailsScreen = ({route}: any) => {
         </View>
 
         {/* Customer Reviews */}
-        <Text style={styles.sectionTitle}>Customer Reviews</Text>
+        {/* Customer Reviews */}
+<Text style={styles.sectionTitle}>
+  Customer Reviews ({reviewCount})
+</Text>
 
-        <View style={styles.reviewCard}>
-          <Text style={styles.reviewStars}>⭐⭐⭐⭐⭐</Text>
+{reviews.length === 0 ? (
+  <View style={styles.reviewCard}>
+    <Text style={styles.noReviewsText}>
+      No reviews yet. Be the first to review this product.
+    </Text>
+  </View>
+) : (
+  reviews.map((review: any) => (
+    <View key={review.id} style={styles.reviewCard}>
 
-          <Text style={styles.reviewText}>
-            Excellent quality oil. Traditional taste and aroma. Highly
-            recommended.
-          </Text>
+      <View style={styles.reviewHeader}>
+        <Text style={styles.reviewAuthor}>
+          {review.username || review.user_id || 'Customer'}
+        </Text>
 
-          <Text style={styles.reviewAuthor}>- Ravi Kumar</Text>
-        </View>
+        <Text style={styles.reviewStars}>
+          {'⭐'.repeat(Number(review.rating) || 0)}
+        </Text>
+      </View>
 
-        <View style={styles.reviewCard}>
-          <Text style={styles.reviewStars}>⭐⭐⭐⭐⭐</Text>
+      {review.review ? (
+        <Text style={styles.reviewText}>
+          {review.review}
+        </Text>
+      ) : null}
 
-          <Text style={styles.reviewText}>
-            Pure and chemical free. My family loves it.
-          </Text>
+      <Text style={styles.reviewDate}>
+        {review.created_at
+          ? new Date(review.created_at).toLocaleDateString()
+          : ''}
+      </Text>
 
-          <Text style={styles.reviewAuthor}>- Suresh</Text>
-        </View>
-
+    </View>
+  ))
+)}
         {/* Related Products */}
         <Text style={styles.sectionTitle}>Related Products</Text>
 
@@ -292,58 +441,53 @@ const ProductDetailsScreen = ({route}: any) => {
           contentContainerStyle={{
             paddingHorizontal: 20,
           }}>
-          <View style={styles.relatedCard}>
-            <Image
-              source={require('../assets/images/groundnut.png')}
-              style={styles.relatedImage}
-            />
+          {relatedProducts.map(relatedProduct => (
+            <TouchableOpacity
+              key={relatedProduct.id}
+              style={styles.relatedCard}
+              onPress={() =>
+                navigation.push('ProductDetails', {
+                  product: relatedProduct,
+                })
+              }
+              activeOpacity={0.8}>
+              <Image
+  source={getProductImage(relatedProduct.image)}
+  style={styles.relatedImage}
+/>
 
-            <Text style={styles.relatedTitle}>Groundnut Oil</Text>
+              <Text style={styles.relatedTitle}>{relatedProduct.name}</Text>
 
-            <Text style={styles.relatedPrice}>₹349</Text>
-          </View>
-
-          <View style={styles.relatedCard}>
-            <Image
-              source={require('../assets/images/coconut.png')}
-              style={styles.relatedImage}
-            />
-
-            <Text style={styles.relatedTitle}>Coconut Oil</Text>
-
-            <Text style={styles.relatedPrice}>₹399</Text>
-          </View>
-
-          <View style={styles.relatedCard}>
-            <Image
-              source={require('../assets/images/sesame.png')}
-              style={styles.relatedImage}
-            />
-
-            <Text style={styles.relatedTitle}>Sesame Oil</Text>
-
-            <Text style={styles.relatedPrice}>₹329</Text>
-          </View>
+              <Text style={styles.relatedPrice}>₹{relatedProduct.price}</Text>
+            </TouchableOpacity>
+          ))}
         </ScrollView>
 
-        <View style={{height: 120}} />
+        <View style={{height: 160}} />
       </ScrollView>
 
       {/* Sticky Bottom Bar */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.cartButton}
-          onPress={() => addToCart({...product, quantity: quantity, qty: quantity, size: selectedSize})}>
+          onPress={() => addToCart({...product, quantity: quantity, qty: quantity, size: selectedVariant?.size,
+variantId: selectedVariant?.id,
+price: sellingPrice,})}>
           <Text style={styles.buttonText}>Add To Cart</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.buyButton}
           onPress={() => {
-            navigation.navigate('Checkout', {
-              buyNow: true,
-              product: product,
-            });
+         navigation.navigate('Checkout', {
+  buyNow: true,
+  product: {
+    ...product,
+    size: selectedVariant?.size,
+    variantId: selectedVariant?.id,
+    price: sellingPrice,
+  },
+});
           }}>
           <Text style={styles.buttonText}>Buy Now</Text>
         </TouchableOpacity>
