@@ -172,13 +172,16 @@ const styles = StyleSheet.create({
   },
 
   productCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FAFAFA",
-    padding: 15,
-    borderRadius: 14,
-    marginBottom: 14,
-  },
+  backgroundColor: "#FAFAFA",
+  padding: 15,
+  borderRadius: 14,
+  marginBottom: 14,
+},
+productRow: {
+  width: "100%",
+  flexDirection: "row",
+  alignItems: "center",
+},
 
   productImage: {
     width: 70,
@@ -369,6 +372,58 @@ addressPhone: {
   fontWeight: "600",
   color: "#444",
 },
+  rateReviewSection: {
+    marginTop: 14,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: "#E8E0D5",
+  },
+
+  rateReviewTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#2D341F",
+    marginBottom: 8,
+  },
+
+  starSelector: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+
+  rateStar: {
+    fontSize: 30,
+    color: "#D4A017",
+    marginRight: 5,
+  },
+
+  reviewInput: {
+    minHeight: 75,
+    borderWidth: 1,
+    borderColor: "#DDD4C8",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: "#333",
+    backgroundColor: "#FFFFFF",
+    textAlignVertical: "top",
+  },
+
+  submitReviewButton: {
+    backgroundColor: "#A84B21",
+    borderRadius: 10,
+    paddingVertical: 11,
+    marginTop: 10,
+    alignItems: "center",
+  },
+
+  submitReviewText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
 });
 
 export default styles;

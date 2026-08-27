@@ -18,6 +18,8 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCart } from '../context/CartContext';
 import { HeaderCartButton } from './HomeScreen';
+import {getProductImage} from '../utils/productImage';
+import Config from 'react-native-config';
 
 const ProductsScreen = () => {
   const { addToCart } = useCart();
@@ -39,48 +41,29 @@ const ProductsScreen = () => {
 
   const categories = ['All', 'Sunflower', 'Groundnut', 'Coconut', 'Sesame'];
 
-  const products = [
-    {
-      id: 1,
-      name: 'Sunflower Oil',
-      category: 'Sunflower',
-      price: 299,
-      oldPrice: 349,
-      rating: 4.8,
-      badge: 'Best Seller',
-      image: require('../assets/images/sunflower.png'),
-    },
-    {
-      id: 2,
-      name: 'Groundnut Oil',
-      category: 'Groundnut',
-      price: 349,
-      oldPrice: 399,
-      rating: 4.9,
-      badge: 'Popular',
-      image: require('../assets/images/groundnut.png'),
-    },
-    {
-      id: 3,
-      name: 'Coconut Oil',
-      category: 'Coconut',
-      price: 399,
-      oldPrice: 449,
-      rating: 4.9,
-      badge: 'Premium',
-      image: require('../assets/images/coconut.png'),
-    },
-    {
-      id: 4,
-      name: 'Sesame Oil',
-      category: 'Sesame',
-      price: 329,
-      oldPrice: 379,
-      rating: 4.8,
-      badge: 'Traditional',
-      image: require('../assets/images/sesame.png'),
-    },
-  ];
+ const [products, setProducts] = useState<any[]>([]);
+ useEffect(() => {
+  const loadProducts = async () => {
+    try {
+      const response = await fetch(`${Config.API_BASE_URL}/products`);
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+
+      const result = await response.json();
+
+      console.log('PRODUCTS API RESPONSE:', result);
+      console.log('GROUNDNUT PRODUCT:', result.data?.find((p: any) => p.id === 2));
+
+      setProducts(result.data || []);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+    }
+  };
+
+  loadProducts();
+}, []);
 
   const filteredProducts = products.filter((item) => {
     const matchesCategory =
@@ -183,16 +166,31 @@ const ProductsScreen = () => {
               <TouchableOpacity
                 key={item.id}
                 style={styles.productCard}
-                onPress={() => {
-                  navigation.navigate('ProductDetails', { product: item });
-                }}>
+                onPress={async () => {
+  try {
+    const response = await fetch(
+      `${Config.API_BASE_URL}/products/${item.id}`,
+    );
+
+    const result = await response.json();
+
+    navigation.navigate('ProductDetails', {
+      product: result.data,
+    });
+  } catch (error) {
+    console.error('Failed to load product details:', error);
+  }
+}}>
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>{item.badge}</Text>
                 </View>
 
                 <Text style={styles.heart}>♡</Text>
 
-                <Image source={item.image} style={styles.productImage} />
+                <Image
+                  source={getProductImage(item.image)}
+                  style={styles.productImage} 
+                 />
 
                 <Text style={styles.productName}>{item.name}</Text>
 

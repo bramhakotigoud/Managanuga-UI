@@ -43,9 +43,9 @@ export default function OrdersScreen({
   const [search, setSearch] = useState("");
   const searchInputRef = useRef<TextInput>(null);
 
- useEffect(() => {
+useEffect(() => {
   loadOrders();
-}, [user?.id]);
+}, [user?.login_id]);
 
   useEffect(() => {
     if (search.trim() === "") {
@@ -66,16 +66,16 @@ export default function OrdersScreen({
 
   const loadOrders = async () => {
   try {
-    if (!user?.id) {
-      setOrders([]);
-      setFilteredOrders([]);
-      return;
-    }
+   if (!user?.login_id) {
+  setOrders([]);
+  setFilteredOrders([]);
+  return;
+}
 
-    const response = await getOrders(
-      "USER",
-      user.id
-    );
+   const response = await getOrders(
+  "USER",
+  user.login_id
+);
 
     if (response.success) {
       setOrders(response.data || []);

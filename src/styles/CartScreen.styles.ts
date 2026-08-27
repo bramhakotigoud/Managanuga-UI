@@ -257,6 +257,11 @@ const styles = StyleSheet.create({
     color: '#777',
     marginTop: 10,
   },
+  productImage: {
+  width: 100,
+  height: 100,
+  resizeMode: 'contain',
+},
 });
 
 export default styles;

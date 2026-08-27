@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,28 +8,59 @@ import {
 } from 'react-native';
 
 import {useCart} from '../context/CartContext';
-
+import {getProductImage} from '../utils/productImage';
+import {getProductVariants} from '../services/productVariantService';
 const ProductCard = ({product, navigation}: any) => {
   const {addToCart} = useCart();
+  const [defaultVariant, setDefaultVariant] = useState<any>(null);
+
+useEffect(() => {
+  const loadDefaultVariant = async () => {
+    try {
+      const variants = await getProductVariants(Number(product.id));
+
+      const oneLVariant = variants.find(
+        (variant: any) =>
+          String(variant.size).toLowerCase() === '1l',
+      );
+
+      setDefaultVariant(oneLVariant || null);
+    } catch (error) {
+      console.error('Failed to load default variant:', error);
+    }
+  };
+
+  loadDefaultVariant();
+}, [product.id]);
 
   return (
     <View style={styles.card}>
-      <Image
-        source={product.image}
-        style={styles.image}
-      />
+      <TouchableOpacity
+        onPress={() =>
+          navigation.navigate('ProductDetails', {product})
+        }
+        activeOpacity={0.8}>
+        <Image
+          source={getProductImage(product.image)}
+          style={styles.image}
+        />
+      </TouchableOpacity>
 
       <Text style={styles.name}>
         {product.name}
       </Text>
 
-      <Text style={styles.rating}>
-        ⭐ {product.rating}
-      </Text>
+     <View style={styles.priceRow}>
+  <Text style={styles.price}>
+    ₹{defaultVariant ? defaultVariant.price : product.price}
+  </Text>
 
-      <Text style={styles.price}>
-        ₹{product.price}
-      </Text>
+  <View style={styles.sizeBadge}>
+    <Text style={styles.sizeText}>
+      {defaultVariant?.size || '1L'}
+    </Text>
+  </View>
+</View>
 
       <TouchableOpacity
         style={styles.detailsButton}
@@ -113,4 +144,29 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '700',
   },
+  priceRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginTop: 8,
+},
+
+size: {
+  fontSize: 18,
+  color: '#666',
+  marginLeft: 8,
+  fontWeight: '500',
+},
+sizeBadge: {
+  marginLeft: 8,
+  paddingHorizontal: 8,
+  paddingVertical: 4,
+  borderRadius: 8,
+  backgroundColor: '#F3EFE8',
+},
+
+sizeText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#555',
+},
 });
