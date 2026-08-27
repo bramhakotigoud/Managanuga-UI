@@ -325,18 +325,6 @@ cancelPasswordText: {
   fontSize: 14,
   fontWeight: '600',
 },
-changePasswordButton: {
-  backgroundColor: '#F5E6DD',
-  paddingHorizontal: 12,
-  paddingVertical: 7,
-  borderRadius: 20,
-},
-
-changePasswordButtonText: {
-  color: '#A84B21',
-  fontSize: 12,
-  fontWeight: '700',
-},
 avatarWrapper: {
   position: 'relative',
   width: 100,
@@ -358,7 +346,7 @@ cameraButton: {
   width: 34,
   height: 34,
   borderRadius: 17,
-  backgroundColor: 'transparent',
+  backgroundColor: '#000000',
   alignItems: 'center',
   justifyContent: 'center',
   borderWidth: 3,

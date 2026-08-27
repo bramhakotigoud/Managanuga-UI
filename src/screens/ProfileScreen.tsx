@@ -8,6 +8,7 @@ import {
 } from '../services/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getOrders} from '../services/orderService';
+import {getUnreadCount} from '../services/notificationService';
 import {
   View,
   Text,
@@ -48,6 +49,7 @@ export default function ProfileScreen({ navigation }: any) {
   const [nameInput, setNameInput] = useState('');
   const [savingName, setSavingName] = useState(false);
   const [orderCount, setOrderCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
 const [addressCount, setAddressCount] = useState(0);
 const [showChangePassword, setShowChangePassword] = useState(false);
 
@@ -94,6 +96,7 @@ useEffect(() => {
   if (isFocused && isLoggedIn) {
     loadAddressCount();
     loadOrderCount();
+    loadNotificationCount();
     loadProfileImage();
   }
 }, [isFocused, isLoggedIn, user?.id]);
@@ -121,7 +124,7 @@ const loadOrderCount = async () => {
   try {
     const response = await getOrders(
       'USER',
-      Number(user.id),
+      user.id
     );
 
     console.log('PROFILE ORDERS RESPONSE:', response);
@@ -138,6 +141,24 @@ const loadOrderCount = async () => {
   } catch (error) {
     console.log('ORDER COUNT ERROR:', error);
     setOrderCount(0);
+  }
+};
+
+const loadNotificationCount = async () => {
+  if (!user?.id) {
+    setNotificationCount(0);
+    return;
+  }
+
+  try {
+    const response = await getUnreadCount(user.id);
+
+    setNotificationCount(
+      response?.success ? response.count || 0 : 0,
+    );
+  } catch (error) {
+    console.log('NOTIFICATION COUNT ERROR:', error);
+    setNotificationCount(0);
   }
 };
 
@@ -648,46 +669,31 @@ const uploadSelectedProfileImage = async (
         <Text style={styles.mobile}>
           {`+91 ${user?.mobile || user?.mobile_no || ''}`}
         </Text>
-        <View style={styles.accountHeader}>
-  <Text style={styles.sectionTitle}>Account</Text>
-
-  <TouchableOpacity
-  style={styles.changePasswordButton}
-  onPress={() => setShowChangePassword(true)}>
-  <Text style={styles.changePasswordButtonText}>
-    Change Password
-  </Text>
-</TouchableOpacity>
-</View>
-
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => navigation.navigate('Orders')}
+            activeOpacity={0.7}>
             <Text style={styles.statNumber}>{orderCount}</Text>
-<Text style={styles.statLabel}>Orders</Text>
-          </View>
+            <Text style={styles.statLabel}>Orders</Text>
+          </TouchableOpacity>
 
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>4</Text>
-            <Text style={styles.statLabel}>Wishlist</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => navigation.navigate('Notifications')}
+            activeOpacity={0.7}>
+            <Text style={styles.statNumber}>{notificationCount}</Text>
+            <Text style={styles.statLabel}>Notifications</Text>
+          </TouchableOpacity>
 
-          <View style={styles.statCard}>
+          <TouchableOpacity
+            style={styles.statCard}
+            onPress={() => navigation.navigate('AddressList')}
+            activeOpacity={0.7}>
             <Text style={styles.statNumber}>{addressCount}</Text>
-<Text style={styles.statLabel}>Addresses</Text>
-          </View>
+            <Text style={styles.statLabel}>Addresses</Text>
+          </TouchableOpacity>
         </View>
-<TouchableOpacity
-  style={styles.menuItem}
-  onPress={() => navigation.navigate('Orders')}>
-  <Text style={styles.menuText}>My Orders</Text>
-</TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('AddressList')}>
-          <Text style={styles.menuText}>My Addresses</Text>
-        </TouchableOpacity>
-
         {user &&
   !['9347499591', '9494661235', '9848283838'].includes(
     String(user.mobile).replace(/\D/g, '')
@@ -701,8 +707,8 @@ const uploadSelectedProfileImage = async (
 
         <TouchableOpacity
           style={styles.menuItem}
-          onPress={() => navigation.navigate('Notifications')}>
-          <Text style={styles.menuText}> Notifications</Text>
+          onPress={() => setShowChangePassword(true)}>
+          <Text style={styles.menuText}>Change Password</Text>
         </TouchableOpacity>
 
         {/* 🎁 Refer & Earn Option */}

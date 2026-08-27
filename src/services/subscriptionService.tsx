@@ -12,7 +12,7 @@ export const getSubscriptionPlans = async () => {
 };
 
 export const getMyMembership = async (
-  userId: number,
+  userId: string,
 ) => {
 
   const response = await axios.get(

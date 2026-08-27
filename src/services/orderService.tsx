@@ -4,7 +4,7 @@ const BASE_URL = Config.API_BASE_URL;
 
 export const createOrder = async (
   entity_type: string,
-  entity_id: number,
+  entity_id: string,
   buyNow = false,
   productId?: number,
   quantity = 1,
@@ -27,7 +27,7 @@ export const createOrder = async (
 };
 export const getOrders = async (
   entity_type: string,
-  entity_id: number,
+  entity_id: string,
 ) => {
   const response = await fetch(
     `${BASE_URL}/orders?entity_type=${entity_type}&entity_id=${entity_id}`

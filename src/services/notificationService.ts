@@ -4,7 +4,7 @@ const getBaseUrl = () => {
   return Config.API_BASE_URL;
 };
 
-export const getNotifications = async (userId: number) => {
+export const getNotifications = async (userId: string) => {
   const response = await fetch(
     `${getBaseUrl()}/notifications?userId=${userId}`,
   );
@@ -16,7 +16,7 @@ export const getNotifications = async (userId: number) => {
   return response.json();
 };
 
-export const getUnreadCount = async (userId: number) => {
+export const getUnreadCount = async (userId: string) => {
   const response = await fetch(
     `${getBaseUrl()}/notifications/unread-count?userId=${userId}`,
   );
@@ -30,7 +30,7 @@ export const getUnreadCount = async (userId: number) => {
 
 export const markNotificationAsRead = async (
   notificationId: number,
-  userId: number,
+  userId: string,
 ) => {
   const response = await fetch(
     `${getBaseUrl()}/notifications/${notificationId}/read`,
@@ -52,7 +52,7 @@ export const markNotificationAsRead = async (
   return response.json();
 };
 
-export const markAllNotificationsAsRead = async (userId: number) => {
+export const markAllNotificationsAsRead = async (userId: string) => {
   const response = await fetch(
     `${getBaseUrl()}/notifications/read-all`,
     {

@@ -113,7 +113,7 @@ export const resetPasswordWithOtp = async (
   return await parseResponse(response);
 };
 export const updateUsername = async (
-  userId: number,
+  userId: string,
   username: string
 ) => {
   const response = await fetch(
@@ -174,7 +174,7 @@ export const verifyForgotPasswordOtp = async (
   return await parseResponse(response);
 };
 export const changePassword = async (
-  userId: number,
+ userId: string,
   currentPassword: string,
   newPassword: string,
   confirmPassword: string

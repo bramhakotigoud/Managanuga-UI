@@ -276,7 +276,14 @@ useFocusEffect(
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.topCategoryContainer}>
 
-          <TouchableOpacity style={styles.topCategoryItem}>
+          <TouchableOpacity
+            style={styles.topCategoryItem}
+            onPress={() =>
+              navigation.navigate(
+                'Products' as never,
+                {category: 'All'} as never,
+              )
+            }>
             <Handbag
             size={20}
             color="#2D341F"
@@ -334,7 +341,9 @@ useFocusEffect(
             <Text style={styles.categoryLabel}>Premium</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.topCategoryItem}>
+          <TouchableOpacity
+            style={styles.topCategoryItem}
+            onPress={() => navigation.navigate('Products' as never)}>
             <Gift
             size={20}
             color="#2D341F"
@@ -342,7 +351,9 @@ useFocusEffect(
             <Text style={styles.categoryLabel}>Combo</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.topCategoryItem}>
+          <TouchableOpacity
+            style={styles.topCategoryItem}
+            onPress={() => navigation.navigate('Products' as never)}>
             <List
             size={20}
             color="#2D341F"

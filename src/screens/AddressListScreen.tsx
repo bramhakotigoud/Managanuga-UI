@@ -39,7 +39,7 @@ export default function AddressListScreen() {
   }
 
   try {
-    const response = await getAddresses(Number(user.id));
+    const response = await getAddresses(user.id);
 
     if (response?.success) {
       setAddresses(response.data || []);

@@ -53,7 +53,7 @@ const loadAddress = async () => {
   }
 
   try {
-    const response = await getAddresses(Number(user.id));
+    const response = await getAddresses(user.id);
 
     console.log('CHECKOUT ADDRESSES:', response);
 

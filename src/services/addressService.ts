@@ -1,4 +1,4 @@
-import Config from "react-native-config";
+import Config from "../config";
 
 const BASE_URL = Config.API_BASE_URL;
 
@@ -19,7 +19,7 @@ const readResponse = async (response: Response) => {
 export interface Address {
   id?: number;
   entity_type: string;
-  entity_id: number;
+  entity_id: string;
   address_type?: string;
   full_name: string;
   phone: string;
@@ -68,7 +68,7 @@ export const addAddress = async (
 };
 
 export const getAddresses = async (
-  userId: number
+  userId: string
 ) => {
   const response = await fetch(
     `${BASE_URL}/address?entity_type=USER&entity_id=${userId}`

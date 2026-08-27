@@ -29,14 +29,14 @@ export const GifAnimationProvider = ({
 
   timerRef.current = setTimeout(() => {
     setGifPlaying(false);
-  }, 10000);
+  }, 5000);
 }, []);
 
   useEffect(() => {
     // First 10 seconds after app/navigation opens
     timerRef.current = setTimeout(() => {
       setGifPlaying(false);
-    }, 10000);
+    }, 5000);
 
     return () => {
       if (timerRef.current) {

@@ -74,7 +74,7 @@ export default function OrdersScreen({
 
     const response = await getOrders(
       "USER",
-      Number(user.id)
+      user.id
     );
 
     if (response.success) {

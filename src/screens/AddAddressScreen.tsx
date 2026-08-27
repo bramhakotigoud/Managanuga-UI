@@ -273,7 +273,7 @@ const handleCurrentLocation = async () => {
   try {
     const addressData = {
       entity_type: 'USER',
-      entity_id: Number(user.id),
+      entity_id: user.id,
       address_type: addressType,
       full_name: name.trim(),
       phone: mobile,
