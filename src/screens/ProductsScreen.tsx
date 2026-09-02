@@ -66,13 +66,18 @@ const ProductsScreen = () => {
 }, []);
 
   const filteredProducts = products.filter((item) => {
-    const matchesCategory =
-      selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesSearch = item.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const matchesCategory =
+    selectedCategory === 'All' ||
+    item.name
+      ?.toLowerCase()
+      .includes(selectedCategory.toLowerCase());
+
+  const matchesSearch = item.name
+    ?.toLowerCase()
+    .includes(search.toLowerCase());
+
+  return matchesCategory && matchesSearch;
+});
 
   return (
     <SafeAreaView style={styles.container}>

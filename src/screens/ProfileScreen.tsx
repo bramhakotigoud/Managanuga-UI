@@ -9,6 +9,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getOrders} from '../services/orderService';
 import {getUnreadCount} from '../services/notificationService';
+import {getAddresses} from '../services/addressService';
 import {
   View,
   Text,
@@ -102,13 +103,25 @@ useEffect(() => {
 }, [isFocused, isLoggedIn, user?.id]);
 
 const loadAddressCount = async () => {
-  try {
-    const data = await AsyncStorage.getItem('addresses');
-    const addresses = data ? JSON.parse(data) : [];
+  if (!user?.id) {
+    setAddressCount(0);
+    return;
+  }
 
-    setAddressCount(
-      Array.isArray(addresses) ? addresses.length : 0
-    );
+  try {
+    const response = await getAddresses(user.id);
+
+    console.log('PROFILE ADDRESSES RESPONSE:', response);
+
+    if (response?.success) {
+      setAddressCount(
+        Array.isArray(response.data)
+          ? response.data.length
+          : 0,
+      );
+    } else {
+      setAddressCount(0);
+    }
   } catch (error) {
     console.log('ADDRESS COUNT ERROR:', error);
     setAddressCount(0);
@@ -123,9 +136,9 @@ const loadOrderCount = async () => {
 
   try {
     const response = await getOrders(
-      'USER',
-      user.id
-    );
+  'USER',
+  user.login_id
+);
 
     console.log('PROFILE ORDERS RESPONSE:', response);
 
